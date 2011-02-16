@@ -453,6 +453,11 @@ int main (int argc, char **argv)
 	if (j)
 		parms.memsize = (int) (Q_atof(com_argv[j+1]) * 1024 * 1024);
 	parms.membase = malloc (parms.memsize);
+	if (!parms.membase)
+	{
+		fprintf(stderr, "Error: not enough memory\n");
+		Sys_Quit();
+	}
 
 	printf ("Host_Init\n");
 	Host_Init (&parms);

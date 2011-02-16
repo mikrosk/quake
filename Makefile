@@ -18,7 +18,7 @@ else
 endif
 
 NATIVECC=gcc
-CC3=/root/download/atari-gcc/bin/gcc
+#CC3=/root/download/atari-gcc/bin/gcc
 
 CC=${bin-prefix}gcc
 AS=${bin-prefix}as
@@ -28,11 +28,11 @@ FLAGS=${bin-prefix}flags
 STRIP=${bin-prefix}strip -s
 
 BASE_CFLAGS=-Dstricmp=strcasecmp -DM68K_MIX -DM68KASM
-RELEASE_CFLAGS=$(BASE_CFLAGS) -g -Wall -m68060 -O3
+RELEASE_CFLAGS=$(BASE_CFLAGS) -Wall -m68060 -O3 -fomit-frame-pointer
 DEBUG_CFLAGS=$(BASE_CFLAGS) -g -Wall -m68060
 LDFLAGS=-lm
 
-DO_CC=$(CC3) $(CFLAGS) -o $@ -c $<
+DO_CC=$(CC) $(CFLAGS) -o $@ -c $<
 DO_AS=$(AS) -m68060 -o $@ $<
 DO_DEVPAC2GAS=$(MOUNT_DIR)/devpac2gas.perl $< > $@
 
