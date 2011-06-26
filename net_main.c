@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // net_main.c
 
 #include "quakedef.h"
-//#include "net_vcr.h"
+#include "net_vcr.h"
 
 qsocket_t	*net_activeSockets = NULL;
 qsocket_t	*net_freeSockets = NULL;
@@ -469,7 +469,6 @@ qsocket_t *NET_CheckNewConnections (void)
 		ret = dfunc.CheckNewConnections ();
 		if (ret)
 		{
-			/*
 			if (recording)
 			{
 				vcrConnect.time = host_time;
@@ -478,12 +477,10 @@ qsocket_t *NET_CheckNewConnections (void)
 				Sys_FileWrite (vcrFile, &vcrConnect, sizeof(vcrConnect));
 				Sys_FileWrite (vcrFile, ret->address, NET_NAMELEN);
 			}
-			*/
 			return ret;
 		}
 	}
 	
-	/*
 	if (recording)
 	{
 		vcrConnect.time = host_time;
@@ -491,7 +488,6 @@ qsocket_t *NET_CheckNewConnections (void)
 		vcrConnect.session = 0;
 		Sys_FileWrite (vcrFile, &vcrConnect, sizeof(vcrConnect));
 	}
-	*/
 
 	return NULL;
 }
@@ -580,7 +576,6 @@ int	NET_GetMessage (qsocket_t *sock)
 				unreliableMessagesReceived++;
 		}
 
-		/*
 		if (recording)
 		{
 			vcrGetMessage.time = host_time;
@@ -591,11 +586,9 @@ int	NET_GetMessage (qsocket_t *sock)
 			Sys_FileWrite (vcrFile, &vcrGetMessage, 24);
 			Sys_FileWrite (vcrFile, net_message.data, net_message.cursize);
 		}
-		*/
 	}
 	else
 	{
-		/*
 		if (recording)
 		{
 			vcrGetMessage.time = host_time;
@@ -604,7 +597,6 @@ int	NET_GetMessage (qsocket_t *sock)
 			vcrGetMessage.ret = ret;
 			Sys_FileWrite (vcrFile, &vcrGetMessage, 20);
 		}
-		*/
 	}
 
 	return ret;
@@ -648,7 +640,6 @@ int NET_SendMessage (qsocket_t *sock, sizebuf_t *data)
 	if (r == 1 && sock->driver)
 		messagesSent++;
 
-	/*
 	if (recording)
 	{
 		vcrSendMessage.time = host_time;
@@ -657,7 +648,6 @@ int NET_SendMessage (qsocket_t *sock, sizebuf_t *data)
 		vcrSendMessage.r = r;
 		Sys_FileWrite (vcrFile, &vcrSendMessage, 20);
 	}
-	*/
 	
 	return r;
 }
@@ -681,7 +671,6 @@ int NET_SendUnreliableMessage (qsocket_t *sock, sizebuf_t *data)
 	if (r == 1 && sock->driver)
 		unreliableMessagesSent++;
 
-	/*
 	if (recording)
 	{
 		vcrSendMessage.time = host_time;
@@ -690,7 +679,6 @@ int NET_SendUnreliableMessage (qsocket_t *sock, sizebuf_t *data)
 		vcrSendMessage.r = r;
 		Sys_FileWrite (vcrFile, &vcrSendMessage, 20);
 	}
-	*/
 	
 	return r;
 }
@@ -718,7 +706,6 @@ qboolean NET_CanSendMessage (qsocket_t *sock)
 
 	r = sfunc.CanSendMessage(sock);
 	
-	/*
 	if (recording)
 	{
 		vcrSendMessage.time = host_time;
@@ -727,7 +714,6 @@ qboolean NET_CanSendMessage (qsocket_t *sock)
 		vcrSendMessage.r = r;
 		Sys_FileWrite (vcrFile, &vcrSendMessage, 20);
 	}
-	*/
 	
 	return r;
 }
@@ -821,7 +807,6 @@ void NET_Init (void)
 	int			controlSocket;
 	qsocket_t	*s;
 
-	/*
 	if (COM_CheckParm("-playback"))
 	{
 		net_numdrivers = 1;
@@ -844,8 +829,6 @@ void NET_Init (void)
 		else
 			Sys_Error ("NET_Init: you must specify a number after -port");
 	}
-	*/
-	
 	net_hostport = DEFAULTnet_hostport;
 
 	if (COM_CheckParm("-listen") || cls.state == ca_dedicated)

@@ -55,7 +55,6 @@ typedef struct
  * TODO:
  * =====
  * - cd audio
- * - networking
  * - joystick support?
  * - more graphics resolutions?
  */
@@ -441,7 +440,7 @@ int main (int argc, char **argv)
 
 	Sys_Init();
 
-	parms.memsize = 48*1024*1024;
+	parms.memsize = 32*1024*1024;
 	parms.basedir = ".";
 
 	COM_InitArgv (argc, argv);

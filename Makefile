@@ -4,6 +4,7 @@
 # Sep '06 by Miro Kropacek <miro.kropacek@gmail.com>
 #
 
+CROSS=yes
 MOUNT_DIR=.
 
 BUILD_DEBUG_DIR=debug
@@ -27,9 +28,9 @@ STACK=${bin-prefix}stack
 FLAGS=${bin-prefix}flags
 STRIP=${bin-prefix}strip -s
 
-BASE_CFLAGS=-Dstricmp=strcasecmp -DM68K_MIX -DM68KASM
-RELEASE_CFLAGS=$(BASE_CFLAGS) -Wall -m68060 -O3 -fomit-frame-pointer
-DEBUG_CFLAGS=$(BASE_CFLAGS) -g -Wall -m68060
+BASE_CFLAGS=-Dstricmp=strcasecmp -DM68K_MIX -DM68KASM -m68060 -Wall
+RELEASE_CFLAGS=$(BASE_CFLAGS) -O3 -fomit-frame-pointer -ffast-math
+DEBUG_CFLAGS=$(BASE_CFLAGS) -g
 LDFLAGS=-lm
 
 DO_CC=$(CC) $(CFLAGS) -o $@ -c $<
@@ -91,8 +92,11 @@ QUAKE_OBJS = \
 	$(BUILDDIR)/obj/menu.o \
 	$(BUILDDIR)/obj/mathlib.o \
 	$(BUILDDIR)/obj/model.o \
+	$(BUILDDIR)/obj/net_dgrm.o \
 	$(BUILDDIR)/obj/net_loop.o \
 	$(BUILDDIR)/obj/net_main.o \
+	$(BUILDDIR)/obj/net_vcr.o \
+	$(BUILDDIR)/obj/net_udp.o \
 	$(BUILDDIR)/obj/net_atari.o \
 	$(BUILDDIR)/obj/nonintel.o \
 	$(BUILDDIR)/obj/pr_cmds.o \
@@ -161,13 +165,13 @@ $(BUILDDIR)/quake.ttp : $(QUAKE_OBJS) $(QUAKE_M68K_OBJS)
 	$(STACK) --fix=512k $(BUILDDIR)/quake.ttp
 	$(FLAGS) -S $(BUILDDIR)/quake.ttp
 	cp $(BUILDDIR)/quake.ttp $(MOUNT_DIR)
-	$(STRIP) quake.ttp
+	#$(STRIP) quake.ttp
 	
-quakedef68k.i: genasmheaders quakeasmheaders.gen
-	$(MOUNT_DIR)/genasmheaders quakeasmheaders.gen $@ 1 "$(NATIVECC) -I."
+#quakedef68k.i: genasmheaders quakeasmheaders.gen
+#	$(MOUNT_DIR)/genasmheaders quakeasmheaders.gen $@ 1 "$(NATIVECC) -I."
 
-genasmheaders: genasmheaders.c
-	$(NATIVECC) -o $@ genasmheaders.c
+#genasmheaders: genasmheaders.c
+#	$(NATIVECC) -o $@ genasmheaders.c
 
 ####
 
@@ -261,10 +265,19 @@ $(BUILDDIR)/obj/mathlib.o :  $(MOUNT_DIR)/mathlib.c
 $(BUILDDIR)/obj/model.o :    $(MOUNT_DIR)/model.c
 	$(DO_CC)
 
+$(BUILDDIR)/obj/net_dgrm.o : $(MOUNT_DIR)/net_dgrm.c
+	$(DO_CC)
+
 $(BUILDDIR)/obj/net_loop.o : $(MOUNT_DIR)/net_loop.c
 	$(DO_CC)
 
 $(BUILDDIR)/obj/net_main.o : $(MOUNT_DIR)/net_main.c
+	$(DO_CC)
+
+$(BUILDDIR)/obj/net_vcr.o :  $(MOUNT_DIR)/net_vcr.c
+	$(DO_CC)
+
+$(BUILDDIR)/obj/net_udp.o :  $(MOUNT_DIR)/net_udp.c
 	$(DO_CC)
 
 $(BUILDDIR)/obj/net_atari.o :  $(MOUNT_DIR)/net_atari.c
@@ -501,7 +514,7 @@ $(MOUNT_DIR)/d_sprite68k.s:          $(M68KASM_DIR)/d_sprite68k.s
 clean: clean-debug clean-release
 	-rm *.BAK *.bak
 	-rm *68k.s
-	-rm gendefs gendefs.c genasmheaders quakedef68k.i
+	-rm gendefs gendefs.c genasmheaders #quakedef68k.i
 	-rm quake.ttp
 
 clean-debug:
