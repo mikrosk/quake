@@ -17,7 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-// net_udp.c
 
 #include "quakedef.h"
 
@@ -28,6 +27,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <sys/param.h>
 #include <sys/ioctl.h>
 #include <errno.h>
+
+#include <net/if.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #ifdef __sun__
 #include <sys/filio.h>
@@ -41,64 +44,190 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <fcntl.h>
 #endif
 
-extern int gethostname (char *, int);
-extern int close (int);
-
-extern cvar_t hostname;
-
-static int net_acceptsocket = -1;		// socket for fielding new connections
-static int net_controlsocket;
-static int net_broadcastsocket = 0;
-static struct qsockaddr broadcastaddr;
-
-static unsigned long myAddr;
-
 #include "net_udp.h"
 
-//=============================================================================
+/*
+#ifdef __MINT__
+#include <fcntl.h>
+#endif
 
-int UDP_Init (void)
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <sys/param.h>
+#include <sys/ioctl.h>
+#include <errno.h>
+
+#include "common.h"
+#include "console.h"
+#include "net.h"
+#include "net_udp.h"
+#include "quakedef.h"
+#include "sys.h"
+*/
+
+/* socket for fielding new connections */
+static int net_acceptsocket = -1;
+static int net_controlsocket;
+static int net_broadcastsocket = 0;
+static struct sockaddr_in broadcastaddr;
+
+/*
+ * There are three addresses that we may use in different ways:
+ *   myAddr	- This is the "default" address returned by the OS
+ *   localAddr	- This is an address to advertise in CCREP_SERVER_INFO
+ *		 and CCREP_ACCEPT response packets, rather than the
+ *		 default address (sometimes the default address is not
+ *		 suitable for LAN clients; i.e. loopback address). Set
+ *		 on the command line using the "-localip" option.
+ *   bindAddr	- The address to which we bind our network socket. The
+ *		 default is INADDR_ANY, but in some cases we may want
+ *		 to only listen on a particular address. Set on the
+ *		 command line using the "-ip" option.
+ */
+static struct in_addr myAddr;
+static struct in_addr localAddr;
+static struct in_addr bindAddr;
+static char ifname[IFNAMSIZ];
+
+static int udp_scan_iface(int sock)
 {
-	struct hostent *local;
-	char	buff[MAXHOSTNAMELEN];
-	struct qsockaddr addr;
-	char *colon;
-	
-	if (COM_CheckParm ("-noudp"))
+    struct ifconf ifc;
+    struct ifreq *ifr;
+    char buf[8192];
+    int i, n;
+    struct sockaddr_in *iaddr;
+    struct in_addr addr;
+
+    if (COM_CheckParm("-noifscan"))
 		return -1;
 
-	// determine my name & address
-	gethostname(buff, MAXHOSTNAMELEN);
-	local = gethostbyname(buff);
-	if (local == NULL)
-		Sys_Error("UDP_Init: Unable to resolve host by name\n");
-		
-	myAddr = *(int *)local->h_addr_list[0];
+    ifc.ifc_len = sizeof(buf);
+    ifc.ifc_buf = buf;
 
-	// if the quake hostname isn't set, set it to the machine name
-	if (Q_strcmp(hostname.string, "UNNAMED") == 0)
+    if (ioctl(sock, SIOCGIFCONF, &ifc) == -1) 
 	{
-		buff[15] = 0;
-		Cvar_Set ("hostname", buff);
-	}
+		Con_Printf("%s: SIOCGIFCONF failed\n", __func__);
+		return -1;
+    }
 
-	if ((net_controlsocket = UDP_OpenSocket (0)) == -1)
-		Sys_Error("UDP_Init: Unable to open control socket\n");
+    ifr = ifc.ifc_req;
+    n = ifc.ifc_len / sizeof(struct ifreq);
 
-	((struct sockaddr_in *)&broadcastaddr)->sin_family = AF_INET;
-	((struct sockaddr_in *)&broadcastaddr)->sin_addr.s_addr = INADDR_BROADCAST;
-	((struct sockaddr_in *)&broadcastaddr)->sin_port = htons(net_hostport);
+    for (i = 0; i < n; i++)
+	{
+		if (ioctl(sock, SIOCGIFADDR, &ifr[i]) == -1)
+			continue;
+		iaddr = (struct sockaddr_in *)&ifr[i].ifr_addr;
+		Con_DPrintf("%s: %s\n", ifr[i].ifr_name, inet_ntoa(iaddr->sin_addr));
+		addr.s_addr = iaddr->sin_addr.s_addr;
+		if (addr.s_addr != htonl(INADDR_LOOPBACK)) 
+		{
+			myAddr.s_addr = addr.s_addr;
+			strcpy (ifname, ifr[i].ifr_name);
+			return 0;
+		}
+    }
 
-	UDP_GetSocketAddr (net_controlsocket, &addr);
-	Q_strcpy(my_tcpip_address,  UDP_AddrToString (&addr));
-	colon = Q_strrchr (my_tcpip_address, ':');
-	if (colon)
+    return -1;
+}
+
+int UDP_Init(void)
+{
+    int i, err;
+    struct hostent *local;
+    char buff[MAXHOSTNAMELEN];
+    struct qsockaddr addr;
+    char *colon;
+
+    if (COM_CheckParm("-noudp"))
+		return -1;
+
+    /* determine my name & address */
+    myAddr.s_addr = htonl(INADDR_LOOPBACK);
+    err = gethostname(buff, MAXHOSTNAMELEN);
+    if (err) 
+	{
+		Con_Printf("%s: WARNING: gethostname failed (%s)\n", __func__, strerror(errno));
+    }
+    else
+	{
+		buff[MAXHOSTNAMELEN - 1] = 0;
+		local = gethostbyname(buff);
+		if (!local) 
+		{
+			Con_Printf("%s: WARNING: gethostbyname failed (%s)\n", __func__, hstrerror(h_errno));
+		}
+		else if (local->h_addrtype != AF_INET) 
+		{
+			Con_Printf("%s: address from gethostbyname not IPv4\n", __func__);
+		}
+		else
+		{
+			myAddr = *(struct in_addr *)local->h_addr_list[0];
+		}
+    }
+
+    i = COM_CheckParm("-ip");
+    if (i && i < com_argc - 1) 
+	{
+		bindAddr.s_addr = inet_addr(com_argv[i + 1]);
+		if (bindAddr.s_addr == INADDR_NONE)
+			Sys_Error("%s: %s is not a valid IP address", __func__, com_argv[i + 1]);
+		Con_Printf("Binding to IP Interface Address of %s\n", com_argv[i + 1]);
+    } 
+    else
+	{
+		bindAddr.s_addr = INADDR_NONE;
+    }
+
+    i = COM_CheckParm("-localip");
+    if (i && i < com_argc - 1)
+	{
+		localAddr.s_addr = inet_addr(com_argv[i + 1]);
+		if (localAddr.s_addr == INADDR_NONE)
+			Sys_Error("%s: %s is not a valid IP address", __func__, com_argv[i + 1]);
+		Con_Printf("Advertising %s as the local IP in response packets\n", com_argv[i + 1]);
+    }
+    else
+	{
+		localAddr.s_addr = INADDR_NONE;
+    }
+
+    net_controlsocket = UDP_OpenSocket(0);
+    if (net_controlsocket == -1) 
+	{
+		Con_Printf("%s: Unable to open control socket, UDP disabled\n", __func__);
+		return -1;
+    }
+
+    /* myAddr may resolve to 127.0.0.1, see if we can do any better */
+    memset (ifname, 0, sizeof(ifname));
+    if (myAddr.s_addr == htonl(INADDR_LOOPBACK)) 
+	{
+		if (udp_scan_iface(net_controlsocket) == 0)
+			Con_Printf ("UDP, Local address: %s (%s)\n", inet_ntoa(myAddr), ifname);
+    }
+    if (ifname[0] == 0) 
+	{
+		Con_Printf ("UDP, Local address: %s\n", inet_ntoa(myAddr));
+    }
+
+    broadcastaddr.sin_family = AF_INET;
+    broadcastaddr.sin_addr.s_addr = INADDR_BROADCAST;
+    broadcastaddr.sin_port = htons(net_hostport);
+
+    UDP_GetSocketAddr(net_controlsocket, &addr);
+    strcpy(my_tcpip_address, UDP_AddrToString(&addr));
+    colon = strrchr(my_tcpip_address, ':');
+    if (colon)
 		*colon = 0;
 
-	Con_Printf("UDP Initialized\n");
-	tcpipAvailable = true;
+    Con_Printf("UDP Initialized (%s)\n", my_tcpip_address);
+    tcpipAvailable = true;
 
-	return net_controlsocket;
+    return net_controlsocket;
 }
 
 //=============================================================================
@@ -160,7 +289,10 @@ int UDP_OpenSocket (int port)
 	}
 
 	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;
+	if (bindAddr.s_addr != INADDR_NONE)
+		address.sin_addr.s_addr = bindAddr.s_addr;
+    else
+		address.sin_addr.s_addr = INADDR_ANY;
 	address.sin_port = htons(port);
 	if( bind (newsocket, (void *)&address, sizeof(address)) == -1)
 		goto ErrorReturn;
@@ -235,7 +367,7 @@ static int PartialIPAddress (char *in, struct qsockaddr *hostaddr)
 
 	hostaddr->sa_family = AF_INET;
 	((struct sockaddr_in *)hostaddr)->sin_port = htons((short)port);	
-	((struct sockaddr_in *)hostaddr)->sin_addr.s_addr = (myAddr & htonl(mask)) | htonl(addr);
+	((struct sockaddr_in *)hostaddr)->sin_addr.s_addr = (myAddr.s_addr & htonl(mask)) | htonl(addr);
 	
 	return 0;
 }
@@ -251,6 +383,9 @@ int UDP_Connect (int socket, struct qsockaddr *addr)
 int UDP_CheckNewConnections (void)
 {
 	unsigned long	available;
+	struct sockaddr_in from;
+    socklen_t fromlen;
+    char buff[1];
 
 	if (net_acceptsocket == -1)
 		return -1;
@@ -259,6 +394,9 @@ int UDP_CheckNewConnections (void)
 		Sys_Error ("UDP: ioctlsocket (FIONREAD) failed\n");
 	if (available)
 		return net_acceptsocket;
+	
+	/* quietly absorb empty packets */
+    recvfrom (net_acceptsocket, buff, 0, 0, (struct sockaddr *)&from, &fromlen);
 	return -1;
 }
 
@@ -352,18 +490,31 @@ int UDP_StringToAddr (char *string, struct qsockaddr *addr)
 
 //=============================================================================
 
-int UDP_GetSocketAddr (int socket, struct qsockaddr *addr)
+int UDP_GetSocketAddr(int socket, struct qsockaddr *addr)
 {
-	int addrlen = sizeof(struct qsockaddr);
-	unsigned int a;
+    struct sockaddr_in *address = (struct sockaddr_in *)addr;
+    socklen_t len = sizeof(struct qsockaddr);
+    struct in_addr a;
 
-	Q_memset(addr, 0, sizeof(struct qsockaddr));
-	getsockname(socket, (struct sockaddr *)addr, &addrlen);
-	a = ((struct sockaddr_in *)addr)->sin_addr.s_addr;
-	if (a == 0 || a == inet_addr("127.0.0.1"))
-		((struct sockaddr_in *)addr)->sin_addr.s_addr = myAddr;
+    memset(address, 0, len);
+    getsockname(socket, (struct sockaddr *)address, &len);
 
-	return 0;
+    /*
+     * The returned IP is embedded in our repsonse to a broadcast request for
+     * server info from clients. The server admin may wish to advertise a
+     * specific IP for various reasons, so allow the "default" address
+     * returned by the OS to be overridden.
+     */
+    if (localAddr.s_addr != INADDR_NONE)
+		address->sin_addr.s_addr = localAddr.s_addr;
+    else 
+	{
+		a = address->sin_addr;
+		if (!a.s_addr || a.s_addr == htonl(INADDR_LOOPBACK))
+			address->sin_addr.s_addr = myAddr.s_addr;
+    }
+
+    return 0;
 }
 
 //=============================================================================
