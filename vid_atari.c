@@ -23,6 +23,7 @@
 
 #include <mint/osbind.h>
 #include <mint/ostruct.h>
+#include <mint/falcon.h>
 
 #include "quakedef.h"
 #include "d_local.h"
@@ -49,6 +50,7 @@ static char* screen2 = NULL;	// logical screen
 static char* screen3 = NULL;	// temp screen
 #define screen	screen2
 
+static qboolean vga;
 
 unsigned short	d_8to16table[256];
 unsigned	d_8to24table[256];
@@ -67,6 +69,8 @@ void	VID_ShiftPalette (unsigned char *palette)
 
 void	VID_Init (unsigned char *palette)
 {
+	vga = VgetMonitor() == MON_VGA;
+	
 	vid.maxwarpwidth = vid.width = vid.conwidth = BASEWIDTH;
 	vid.maxwarpheight = vid.height = vid.conheight = BASEHEIGHT;
 	vid.aspect = 1.0;
@@ -80,7 +84,7 @@ void	VID_Init (unsigned char *palette)
 	D_InitCaches (surfcache, sizeof(surfcache));
 	
 	// alloc triplebuffer
-	screen1 = (char*)Mxalloc( 3 * ( vid.width * vid.height * sizeof( pixel_t ) ) + 15, MX_STRAM );
+	screen1 = (char*)Mxalloc( 3 * ( vid.width * (vga ? 240 : vid.height) * sizeof( pixel_t ) ) + 15, MX_STRAM );
 	if( screen1 == NULL )
 	{
 		Sys_Error( "Not enough memory to allocate screens!\n" );
@@ -89,16 +93,23 @@ void	VID_Init (unsigned char *palette)
 	
 	// align on 16 bytes & assign the rest of pointers
 	screen1 = (char*)( ( (long)screen1 + 15 ) & 0xfffffff0 );
-	screen2 = (char*)( (long)screen1 + vid.width * vid.height * sizeof( pixel_t ) );
-	screen3 = (char*)( (long)screen2 + vid.width * vid.height * sizeof( pixel_t ) );
+	screen2 = (char*)( (long)screen1 + vid.width * (vga ? 240 : vid.height) * sizeof( pixel_t ) );
+	screen3 = (char*)( (long)screen2 + vid.width * (vga ? 240 : vid.height) * sizeof( pixel_t ) );
 	
-	Q_memset( screen1, 0, vid.width * vid.height * sizeof( pixel_t ) );
-	Q_memset( screen2, 0, vid.width * vid.height * sizeof( pixel_t ) );
-	Q_memset( screen3, 0, vid.width * vid.height * sizeof( pixel_t ) );
+	Q_memset( screen1, 0, vid.width * (vga ? 240 : vid.height) * sizeof( pixel_t ) );
+	Q_memset( screen2, 0, vid.width * (vga ? 240 : vid.height) * sizeof( pixel_t ) );
+	Q_memset( screen3, 0, vid.width * (vga ? 240 : vid.height) * sizeof( pixel_t ) );
 	
 	#ifndef NO_ATARI_VIDEO
 	video_atari_init( screen1 );
-	video_atari_set_320x200();
+	if( vga )
+	{
+		VsetMode( BPS8 | COL40 | VGA | VERTFLAG );
+	}
+	else
+	{
+		VsetMode( BPS8 | COL40 | TV | PAL );
+	}
 	isVideoInited = true;
 	#endif
 }
@@ -118,8 +129,8 @@ void	VID_Update (vrect_t *rects)
 	char* temp;
 	
 	#ifndef NO_ATARI_VIDEO
-	video_atari_c2p( vid.buffer, screen, vid.width * vid.height * sizeof( pixel_t ) );
-	
+	video_atari_c2p( vid.buffer, screen + ( vga ? ( ( 240 - vid.height ) / 2 ) * vid.rowbytes : 0 ), vid.width * vid.height * sizeof( pixel_t ) );
+
 	// cycle 3 screens
 	temp	= screen1;
 	screen1	= screen2;	// now physical screen = logical screen (i.e. "screen")

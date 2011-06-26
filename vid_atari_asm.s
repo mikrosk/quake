@@ -25,7 +25,6 @@
 	.globl	_video_atari_shutdown
 	.globl	_video_atari_set_palette
 	.globl	_video_atari_c2p
-	.globl	_video_atari_set_320x200
 	
 	.globl	_screen1
 
@@ -421,51 +420,6 @@ c2p_start:
 	rts
 	
 	
-_video_atari_set_320x200:
-	movem.l	d2-d7/a2-a6,-(sp)
-	
-	move.w	#0x59,-(sp)			| VgetMonitor()
-	trap	#14				|
-	addq.l	#2,sp				|
-
-	cmp.w	#2,d0
-	bne.b	rgb
-vga:	move.l	#vga_320x200,temp_1
-	bra.b	monitor_ok
-
-rgb:	and.b	#0x01,d0			| %00000001
-	beq.b	mono
-	move.l	#rgb_320x200,temp_1
-	
-monitor_ok:
-	pea	set_res
-	move.w	#0x26,-(sp)			| Supexec
-	trap	#14				|
-	addq.l	#6,sp				|
-		
-mono:	movem.l	(sp)+,d2-d7/a2-a6
-	rts
-
-set_res:
-	bsr.w	wait_vbl			| avoid flicking
-	
-	movea.l	temp_1,a0
-	move.l	(a0)+,0xffff8282.w
-	move.l	(a0)+,0xffff8286.w
-	move.l	(a0)+,0xffff828a.w
-	move.l	(a0)+,0xffff82a2.w
-	move.l	(a0)+,0xffff82a6.w
-	move.l	(a0)+,0xffff82aa.w
-	move.w	(a0)+,0xffff820a.w
-	move.w	(a0)+,0xffff82c0.w
-	clr.w	0xffff8266.w
-	move.w	(a0)+,0xffff8266.w
-	move.w	(a0)+,0xffff82c2.w
-	move.w	(a0)+,0xffff8210.w
-
-	rts
-
-
 wait_vbl:
 	move.l	a0,-(sp)
 	move.w	#0x25,-(sp)			| Vsync()
@@ -475,36 +429,6 @@ wait_vbl:
 	rts
 	
 	
-	.data
-	
-vga_320x200:
-	dc.l	0x00C6008D
-	dc.l	0x0015029A
-	dc.l	0x007B0097
-	dc.l	0x041903AD
-	dc.l	0x008D008D
-	dc.l	0x03AD0415
-	dc.w	0x0200
-	dc.w	0x0186
-	dc.w	0x0010
-	dc.w	0x0005
-	dc.w	0x00A0
-
-rgb_320x200:
-	dc.l	0x00C7009B
-	dc.l	0x002402BA
-	dc.l	0x008900AB
-	dc.l	0x02710205
-	dc.l	0x00750075
-	dc.l	0x0205026B
-	dc.w	0x0200
-	dc.w	0x0187
-	dc.w	0x0010
-	dc.w	0x0000
-	dc.w	0x00A0
-	
-	
-
 	.bss
 	
 temp_1:	ds.l	1

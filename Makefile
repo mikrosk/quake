@@ -165,7 +165,7 @@ $(BUILDDIR)/quake.ttp : $(QUAKE_OBJS) $(QUAKE_M68K_OBJS)
 	$(STACK) --fix=512k $(BUILDDIR)/quake.ttp
 	$(FLAGS) -S $(BUILDDIR)/quake.ttp
 	cp $(BUILDDIR)/quake.ttp $(MOUNT_DIR)
-	#$(STRIP) quake.ttp
+	$(STRIP) quake.ttp
 	
 #quakedef68k.i: genasmheaders quakeasmheaders.gen
 #	$(MOUNT_DIR)/genasmheaders quakeasmheaders.gen $@ 1 "$(NATIVECC) -I."
