@@ -28,6 +28,7 @@ _anglemod:
 	swap    d0
 	fmove.l d0,fp0
 	fmul.s  #0.0054931641,fp0
+	fmove.s	fp0,d0	; GCC 4.5.x fix !!!
 	rts
 
 
@@ -542,6 +543,7 @@ _Length:
 	fmul    fp1,fp1
 	fadd    fp1,fp0
 	fsqrt   fp0
+	fmove.s	fp0,d0	; GCC 4.5.x fix !!!
 	rts
 
 
@@ -589,6 +591,8 @@ _VectorNormalize:
 	fmul    fp1,fp4
 	fmove.s fp4,(a0)
 .1:     fmovem.x (sp)+,fp2-fp4
+
+	fmove.s	fp0,d0	; GCC 4.5.x fix !!! 
 	rts
 
 
