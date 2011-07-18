@@ -19,7 +19,6 @@ else
 endif
 
 NATIVECC=gcc
-#CC3=/root/download/atari-gcc/bin/gcc
 
 CC=${bin-prefix}gcc
 AS=${bin-prefix}as
@@ -512,10 +511,10 @@ $(MOUNT_DIR)/d_sprite68k.s:          $(M68KASM_DIR)/d_sprite68k.s
 #############################################################################
 
 clean: clean-debug clean-release
-	-rm *.BAK *.bak
-	-rm *68k.s
-	-rm gendefs gendefs.c genasmheaders #quakedef68k.i
-	-rm quake.ttp
+	rm -f *.BAK *.bak *~
+	rm -f *68k.s
+	rm -f gendefs gendefs.c genasmheaders #quakedef68k.i
+	rm -f quake.ttp
 
 clean-debug:
 	$(MAKE) clean2 BUILDDIR=$(BUILD_DEBUG_DIR) CFLAGS="$(DEBUG_CFLAGS)"
@@ -524,5 +523,5 @@ clean-release:
 	$(MAKE) clean2 BUILDDIR=$(BUILD_RELEASE_DIR) CFLAGS="$(DEBUG_CFLAGS)"
 
 clean2:
-	-rm -f $(QUAKE_OBJS) $(QUAKE_M68K_OBJS)
-	-rm $(BUILDDIR)/quake.ttp
+	rm -f $(QUAKE_OBJS) $(QUAKE_M68K_OBJS)
+	rm -f $(BUILDDIR)/quake.ttp
