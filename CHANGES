@@ -1,3 +1,15 @@
+1.03
+====
+
+- a real networking support! (ported from TyrQuake project)
+
+- used standard XBIOS call for both VGA and RGB resolution setting
+
+- decreased memory usage to 32 MB (IMO, still much more than needed)
+
+- preliminary SuperVidel support (screen buffers are placed into SV memory
+  instead of the slow ST-RAM but the C2P process still takes a place)
+
 1.02
 ====
 

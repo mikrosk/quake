@@ -45,6 +45,7 @@ byte	surfcache[4*1024*1024];
 char* screen1 = NULL;	// physical screen
 
 static qboolean isVideoInited = false;
+static qboolean isSvPresent = false;
 
 static char* screen2 = NULL;	// logical screen
 static char* screen3 = NULL;	// temp screen
@@ -54,6 +55,33 @@ static qboolean vga;
 
 unsigned short	d_8to16table[256];
 unsigned	d_8to24table[256];
+
+static long CheckSvPresence( void )
+{
+	typedef struct
+	{
+		long cookie;
+		long value;
+	} COOKIE;
+	COOKIE* pCookie;
+
+	pCookie = *( (COOKIE **)0x5A0L );
+
+	if( pCookie != NULL)
+	{
+		do
+		{
+			if( pCookie->cookie == 0x53757056 /*'SupV'*/ )
+			{
+				isSvPresent = true;
+				break;
+			}
+
+		} while( (pCookie++)->cookie != 0L );
+	}
+
+	return 0;
+}
 
 void	VID_SetPalette (unsigned char *palette)
 {
@@ -70,6 +98,7 @@ void	VID_ShiftPalette (unsigned char *palette)
 void	VID_Init (unsigned char *palette)
 {
 	vga = VgetMonitor() == MON_VGA;
+	Supexec( CheckSvPresence );
 	
 	vid.maxwarpwidth = vid.width = vid.conwidth = BASEWIDTH;
 	vid.maxwarpheight = vid.height = vid.conheight = BASEHEIGHT;
@@ -129,7 +158,8 @@ void	VID_Update (vrect_t *rects)
 	char* temp;
 	
 	#ifndef NO_ATARI_VIDEO
-	video_atari_c2p( vid.buffer, screen + ( vga ? ( ( 240 - vid.height ) / 2 ) * vid.rowbytes : 0 ), vid.width * vid.height * sizeof( pixel_t ) );
+	temp = screen + ( isSvPresent ? 0xA0000000 : 0x00000000 );
+	video_atari_c2p( vid.buffer, temp + ( vga ? ( ( 240 - vid.height ) / 2 ) * vid.rowbytes : 0 ), vid.width * vid.height * sizeof( pixel_t ) );
 
 	// cycle 3 screens
 	temp	= screen1;

@@ -45,12 +45,6 @@ static unsigned char shiftToAscii[128];
 static unsigned char capsToAscii[128];
 static qboolean isMintPresent = false;
 
-typedef struct
-{
-	long cookie;
-	long value;
-} COOKIE;
-
 /*
  * TODO:
  * =====
@@ -84,6 +78,11 @@ int             findhandle (void)
 
 long CheckMintPresence( void )
 {
+	typedef struct
+	{
+		long cookie;
+		long value;
+	} COOKIE;
 	COOKIE* pCookie;
 
 	pCookie = *( (COOKIE **)0x5A0L );
@@ -95,6 +94,7 @@ long CheckMintPresence( void )
 			if( pCookie->cookie == C_MiNT )
 			{
 				isMintPresent = true;
+				break;
 			}
 
 		} while( (pCookie++)->cookie != 0L );
