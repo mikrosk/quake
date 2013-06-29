@@ -87,7 +87,7 @@ qboolean SNDDMA_Init(void)
 	Dsptristate( DSP_TRISTATE, DSP_TRISTATE );
 	
 	Setbuffer( SR_PLAY, shm->buffer, shm->buffer + DMA_BUFFER_SIZE );
-	Buffoper( PLAY_ENABLE | PLAY_REPEAT );	/* enable playback in loop mode */
+	Buffoper( SB_PLA_ENA | SB_PLA_RPT );	/* enable playback in loop mode */
 	
 	shm->samplepos = 0;
 	isSndInited = true;
