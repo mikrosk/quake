@@ -57,7 +57,8 @@
 		XDEF    _R_ClipEdge
 		XDEF    _R_RenderFace
 
-|NEAR_CLIP               equ.s   0.01            ;must match the def. in r_local.h
+;TODO: vasm limitation
+;NEAR_CLIP               equ.s   0.01            ;must match the def. in r_local.h
 FULLY_CLIPPED_CACHED    =       $80000000
 FRAMECOUNT_MASK         =       $7FFFFFFF
 
@@ -101,7 +102,7 @@ _R_EmitEdge
 		fmove.s _r_v1,fp1               ;v0 = r_v1
 		fmove.s _r_lzi1,fp2             ;lzi0 = r_lzi1
 		move.l  _r_ceilv1,d0            ;ceilv0 = r_ceilv1
-		bra.w   .next
+		bra.b   .next
 
 *                world = &pv0->position[0];
 *
@@ -170,23 +171,25 @@ _R_EmitEdge
 
 ******  end of TransformVector
 
-		fcmp.s  #0.01,fp3          ;if transformed[2] < NEAR_CLIP
-		fboge.b .cont
-		fmove.s #0.01,fp3          ;transformed[2] = NEAR_CLIP
+		;fcmp.s  #NEAR_CLIP,fp3          ;if transformed[2] < NEAR_CLIP
+		fcmp.s	#0.01,fp3
+		fboge.w .cont
+		;fmove.s #NEAR_CLIP,fp3          ;transformed[2] = NEAR_CLIP
+		fmove.s	#0.01,fp3
 .cont
-		fmove.w #1,fp2
+		fmove.s #1,fp2
 		fdiv    fp3,fp2                 ;lzi0 = 1.0 / transformed[2]
 		fmul    fp2,fp0
 		fmul.s  _xscale,fp0             ;scale = scale * lzi0
 		fadd.s  _xcenter,fp0            ;u0 = xcenter + (scale * lzi0)
 		fmove.s REFDEF_FVRECTX_ADJ(a4),fp7 ;if (u0 < r_refdef.fvrectx ...
 		fcmp    fp7,fp0
-		fboge.b .cont2
+		fboge.w .cont2
 		fmove   fp7,fp0                 ;u0 = r_refdef.fvrectx_adj
 .cont2
 		fmove.s REFDEF_FVRECTRIGHT_ADJ(a4),fp7
 		fcmp    fp7,fp0                 ;if (u0 > r_refdef.fvrec...
-		fbole.b .cont3
+		fbole.w .cont3
 		fmove   fp7,fp0                 ;u0 = r_refdef.fvrectright_adj
 .cont3
 		fmul    fp2,fp1
@@ -195,12 +198,12 @@ _R_EmitEdge
 		fneg    fp1                     ;scale = yscale * lzi0
 		fmove.s REFDEF_FVRECTY_ADJ(a4),fp7
 		fcmp    fp7,fp1                 ;if (v0 < refdef.fvrecty_adj)
-		fboge.b .cont4
+		fboge.w .cont4
 		fmove   fp7,fp1                 ;v0 = ycenter - scale*transformed[1]
 .cont4
 		fmove.s REFDEF_FVRECTBOTTOM_ADJ(a4),fp7
 		fcmp    fp7,fp1                 ;if (v0 > r_refdef.fvrectb...
-		fbole.b .cont5
+		fbole.w .cont5
 		fmove   fp7,fp1                 ;v0 = r_refdef.fvrectbottom_adj
 .cont5
 		fmove.l fp1,d0
@@ -273,23 +276,25 @@ _R_EmitEdge
 
 ******  end of TransformVector
 
-		fcmp.s  #0.01,fp3          ;if transformed[2] < NEAR_CLIP
-		fboge.b .cont6
-		fmove.s #0.01,fp3          ;transformed[2] = NEAR_CLIP
+		;fcmp.s  #NEAR_CLIP,fp3          ;if transformed[2] < NEAR_CLIP
+		fcmp.s	#0.01,fp3
+		fboge.w .cont6
+		;fmove.s #NEAR_CLIP,fp3          ;transformed[2] = NEAR_CLIP
+		fmove.s	#0.01,fp3
 .cont6
-		fmove.w #1,fp5
+		fmove.s #1,fp5
 		fdiv    fp3,fp5                 ;r_lzi1 = 1.0 / transformed[2]
 		fmul    fp5,fp7
 		fmul.s  _xscale,fp7
 		fadd.s  _xcenter,fp7            ;scale = xscale * r_lzi
 		fmove.s REFDEF_FVRECTX_ADJ(a4),fp4
 		fcmp    fp4,fp7                 ;if (r_u1 < r_refdef...
-		fboge.b .cont7
+		fboge.w .cont7
 		fmove   fp4,fp7                 ;r_u1 = r_refdef.fvrectx_adj)
 .cont7
 		fmove.s REFDEF_FVRECTRIGHT_ADJ(a4),fp4
 		fcmp    fp4,fp7                 ;if (r_u1 > r_refdef...
-		fbole.b .cont8
+		fbole.w .cont8
 		fmove   fp4,fp7                 ;r_u1 = r_refdef.fvrectright_adj)
 .cont8
 		fmul    fp5,fp6
@@ -298,12 +303,12 @@ _R_EmitEdge
 		fneg    fp6                     ;scale = yscale * r_lzi1
 		fmove.s REFDEF_FVRECTY_ADJ(a4),fp4
 		fcmp    fp4,fp6                 ;if (r_v1 < r_refdef...
-		fboge.b .cont9
+		fboge.w .cont9
 		fmove   fp4,fp6                 ;r_v1 = r_refdef.fvrecty_adj
 .cont9
 		fmove.s REFDEF_FVRECTBOTTOM_ADJ(a4),fp4
 		fcmp    fp4,fp6                 ;if (r_v1 > r_refdef...
-		fbole.b .cont10
+		fbole.w .cont10
 		fmove   fp4,fp6                 ;r_v1 = r_refdef.fvrectbottom_adj)
 .cont10
 
@@ -322,17 +327,17 @@ _R_EmitEdge
 *        r_ceilv1 = (int) ceil(r_v1);
 
 		fcmp    fp5,fp2                 ;if (r_lzi1 > lzi0)
-		fboge.b .cont11
+		fboge.w .cont11
 		fmove   fp5,fp2                 ;lzi0 = r_lzi1
 .cont11
 		fcmp.s  _r_nearzi,fp2           ;if (lzi0 > r_nearzi)
-		fbole.b .cont12
+		fbole.w .cont12
 		fmove.s fp2,_r_nearzi           ;r_nearzi = lzi0
 .cont12
 		fmove.l fp6,d1                  ;r_ceilv1 = (int) ceil(r_v1)
 		fmove.l d5,fpcr
 		tst.l   _r_nearzionly           ;if (r_nearzionly)
-		bne.w   .exit2                  ;return
+		bne.b   .exit2                  ;return
 		move.l  #1,_r_emitted           ;r_emitted = 1
 
 *        if (ceilv0 == r_ceilv1)
@@ -350,12 +355,12 @@ _R_EmitEdge
 		cmp.l   d0,d1                   ;if (ceilv0 == r_ceilv1)
 		bne.b   .cont13
 		cmp.l   #$7fffffff,_cacheoffset ;if (cacheoffset != 0x7fffffff)
-		beq.w   .exit1
+		beq.b   .exit1
 		move.l  _r_framecount,d2
 		and.l   #FRAMECOUNT_MASK,d2
 		or.l    #FULLY_CLIPPED_CACHED,d2
 		move.l  d2,_cacheoffset         ;cacheoffset = FULLY...
-		bra.w   .exit1
+		bra.b   .exit1
 
 *        side = ceilv0 > r_ceilv1;
 *
@@ -438,11 +443,11 @@ _R_EmitEdge
 *        edge->u = u*0x100000 + 0xFFFFF;
 
 .cont14
-		fmove.l #16*65536,fp4
+		fmove.s #16*65536,fp4
 		fmul    fp4,fp0
 		fmove.l fp0,EDGE_U_STEP(a2)     ;edge->u_step = u_step*$100000
 		fmul    fp4,fp3
-		fadd.l  #(16*65536)-1,fp3       ;edge->u = u*$100000 + $fffff
+		fadd.s  #(16*65536)-1,fp3       ;edge->u = u*$100000 + $fffff
 		fmove.l fp3,d0
 
 *        if (edge->u < r_refdef.vrect_x_adj_shift20)
@@ -680,7 +685,7 @@ DoRecursion
 
 .less
 		ftst    fp0
-		fboge.b .cont2
+		fboge.w .cont2
 		tst.l   _r_leftclipped
 		bne.w   .exit
 		move.l  _r_framecount,d0
@@ -912,7 +917,7 @@ _R_RenderFace
 
 *                if (lindex > 0)
 
-		ble.w   .cont3                  ;if (lindex > 0)
+		ble.b   .cont3                  ;if (lindex > 0)
 
 *                        r_pedge = &pedges[lindex];
 *
@@ -990,7 +995,7 @@ _R_RenderFace
 .cont2E
 		fmove.s EDGE_NEARZI(a0),fp0
 		fcmp.s  _r_nearzi,fp0
-		fbole.b .cont3E
+		fbole.w .cont3E
 		move.l  EDGE_NEARZI(a0),_r_nearzi
 .cont3E
 		move.l  #1,_r_emitted
@@ -1040,7 +1045,7 @@ _R_RenderFace
 		move.l  #1,_makerightedge       ;makerightedge = true
 .noRC
 		move.l  #1,_r_lastvertvalid     ;r_lastvertvalid = true
-		bra.w   .loopend
+		bra.b   .loopend
 .cont3
 		neg.l   d0                      ;lindex = -lindex
 
@@ -1120,7 +1125,7 @@ _R_RenderFace
 .cont2E2
 		fmove.s EDGE_NEARZI(a0),fp0
 		fcmp.s  _r_nearzi,fp0
-		fbole.b .cont3E2
+		fbole.w .cont3E2
 		move.l  EDGE_NEARZI(a0),_r_nearzi
 .cont3E2
 		move.l  #1,_r_emitted
@@ -1302,7 +1307,7 @@ _R_RenderFace
 		fadd    fp5,fp3
 		fsub.s  (a1)+,fp3
 		fneg    fp3                     ;pplane->dist - DotProduct(...)
-		fmove.w #1,fp5
+		fmove.s #1,fp5
 		fdiv    fp3,fp5                 ;distinv = 1.0 / fp3
 		fmove.s _xscaleinv,fp3
 		fmul    fp5,fp3                 ;xscaleinv * distinv

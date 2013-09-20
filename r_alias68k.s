@@ -200,7 +200,7 @@ _R_AliasTransformFinalVert
 *        fv->v[4] = temp;
 
 		ftst    fp0
-		fboge.b .cont
+		fboge.w .cont
 		fmul.s  _r_shadelight,fp0
 		fmove.l fp0,d1
 		add.l   d1,d0
@@ -238,7 +238,7 @@ _R_AliasProjectFinalVert
 		move.l  .av(sp),a0
 		move.l  .fv(sp),a1
 		fmove.s 8(a0),fp0
-		fmove.w #1,fp1
+		fmove.s #1,fp1
 		fdiv    fp0,fp1
 		fmove.s _ziscale,fp0
 		fmul    fp1,fp0

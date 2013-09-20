@@ -27,6 +27,7 @@
 
 		XDEF    _D_DrawParticle
 
+;TODO: vasm limitation
 ;PARTICLE_Z_CLIP         equ.s   8.0             ;must match the values in d_iface.h!
 
 
@@ -81,9 +82,10 @@ _D_DrawParticle
 		fadd    fp0,fp1
 		fmul.s  (a1)+,fp2
 		fadd    fp1,fp2                 ;fp2 = transformed[2]
-		fcmp.s  #8.0,fp2
+		;fcmp.s  #PARTICLE_Z_CLIP,fp2
+		fcmp.s	#8.0,fp2
 		fblt.w  .exit
-		fmove.w #1,fp0
+		fmove.s #1,fp0
 		fdiv    fp2,fp0                 ;zi = 1.0 / transformed[2]
 		fmove.s #0.5,fp1
 		fmul    fp0,fp3
@@ -112,7 +114,7 @@ _D_DrawParticle
 		lea     0(a0,d1.l*2),a0         ;a0 = pz
 		add.l   d0,a1
 		add.l   _d_viewbuffer,a1        ;a1 = pdest
-		fmul.l  #32768,fp0
+		fmul.s  #32768,fp0
 		fmove.l fp0,d0                  ;izi = (int)(zi * 0x8000)
 		move.l  d0,d5                   ;d5 = izi
 		move.l  _d_pix_shift,d1
@@ -132,8 +134,8 @@ _D_DrawParticle
 		move.l  _screenwidth,d1
 		move.l  _d_y_aspect_shift,d3
 		cmp.l   #4,d0                   ;switch (pix)
-		bgt.w   .more
-		beq.w   .four
+		bgt.b   .more
+		beq.b   .four
 		cmp.l   #2,d0
 		bgt.b   .three
 		beq.b   .two

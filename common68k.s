@@ -110,5 +110,7 @@ _FloatSwap__r
 		ror     #8,d0
 		swap    d0
 		ror     #8,d0
-		;fmove.s d0,fp0 ; GCC 4.5.x fix !!!
+		IFND	ATARI
+		fmove.s d0,fp0
+		ENDC
 		rts

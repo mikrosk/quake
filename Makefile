@@ -10,8 +10,6 @@ MOUNT_DIR=.
 BUILD_DEBUG_DIR=debug
 BUILD_RELEASE_DIR=release
 
-M68KASM_DIR=asm68k
-
 ifeq ($(CROSS),yes)
 	bin-prefix=m68k-atari-mint-
 else
@@ -21,7 +19,7 @@ endif
 NATIVECC=gcc
 
 CC=${bin-prefix}gcc
-AS=${bin-prefix}as
+AS=vasm
 LD=${bin-prefix}ld
 STACK=${bin-prefix}stack
 FLAGS=${bin-prefix}flags
@@ -33,7 +31,7 @@ DEBUG_CFLAGS=$(BASE_CFLAGS) -g
 LDFLAGS=-lm
 
 DO_CC=$(CC) $(CFLAGS) -o $@ -c $<
-DO_AS=$(AS) -m68060 -o $@ $<
+DO_AS=$(AS) -m68060 -Faout -quiet -phxass -DATARI -DM881 -o $@ $<
 DO_DEVPAC2GAS=$(MOUNT_DIR)/devpac2gas.perl $< > $@
 
 #############################################################################
@@ -452,67 +450,12 @@ $(BUILDDIR)/obj/r_bsp68k.o:             $(MOUNT_DIR)/r_bsp68k.s sincos.bin quake
 $(BUILDDIR)/obj/d_sprite68k.o:          $(MOUNT_DIR)/d_sprite68k.s
 	$(DO_AS)
 
-#####
-	
-
-$(MOUNT_DIR)/mathlib68k.s:           $(M68KASM_DIR)/mathlib68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/common68k.s:            $(M68KASM_DIR)/common68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/d_sky68k.s:             $(M68KASM_DIR)/d_sky68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/d_polyset68k.s:         $(M68KASM_DIR)/d_polyset68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/d_part68k.s:            $(M68KASM_DIR)/d_part68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/d_edge68k.s:            $(M68KASM_DIR)/d_edge68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/d_scan68k.s:            $(M68KASM_DIR)/d_scan68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/r_edge68k.s:            $(M68KASM_DIR)/r_edge68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/r_sky68k.s:             $(M68KASM_DIR)/r_sky68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/r_light68k.s:           $(M68KASM_DIR)/r_light68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/r_alias68k.s:           $(M68KASM_DIR)/r_alias68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/r_aclip68k.s:           $(M68KASM_DIR)/r_aclip68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/r_surf68k.s:            $(M68KASM_DIR)/r_surf68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/r_misc68k.s:            $(M68KASM_DIR)/r_misc68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/r_draw68k.s:            $(M68KASM_DIR)/r_draw68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/r_bsp68k.s:             $(M68KASM_DIR)/r_bsp68k.s
-	$(DO_DEVPAC2GAS)
-
-$(MOUNT_DIR)/d_sprite68k.s:          $(M68KASM_DIR)/d_sprite68k.s
-	$(DO_DEVPAC2GAS)
-
 #############################################################################
 # MISC
 #############################################################################
 
 clean: clean-debug clean-release
 	rm -f *.BAK *.bak *~
-	rm -f *68k.s
 	rm -f gendefs gendefs.c genasmheaders #quakedef68k.i
 	rm -f quake.ttp
 

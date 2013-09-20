@@ -21,7 +21,8 @@
 		XDEF    _R_StepActiveU
 		XDEF    _R_GenerateSpans
 
-
+;TODO: vasm limitation
+; (1.0/(16*65536)) replaced with 0.000000954
 
 		fpu
 
@@ -277,7 +278,7 @@ _R_StepActiveU
 		move.l  a0,EDGE_NEXT(a5)        ;pwedge->next = pedge
 		move.l  a4,a0                   ;pedge = pnext_edge
 		cmp.l   a3,a0                   ;if (pedge == &edge_tail)
-		bne.w   .loop
+		bne.b   .loop
 .end
 		movem.l (sp)+,a2-a6
 		rts
@@ -428,17 +429,17 @@ _R_GenerateSpans
 		move.l  SURF_KEY(a1),d6
 		moveq   #0,d3
 		cmp.l   SURF_KEY(a0),d6         ;if (surf->key < surf2->key)
-		blt.w   .le_newtop              ;goto newtop
-		bgt.w   .le_search
+		blt.b   .le_newtop              ;goto newtop
+		bgt.b   .le_search
 		tst.b   d5
-		beq.w   .le_search
+		beq.b   .le_search
 
 		moveq   #-1,d3
 		move.l  d7,d0
 		sub.l   #$fffff,d0              ;edge->u - 0xFFFFF
 		fmove.l d0,fp0                  ;(float)(edge->u - 0xFFFFF)
 		;fmul.s  #(1.0/(16*65536)),fp0   ;fu = fp0 * (1 / $100000)
-		fmul.s  #0.0000009536744,fp0
+		fmul.s	#0.000000954,fp0
 		fmove.s _fv,fp1                 ;fv
 		fmove.s SURF_D_ZIORIGIN(a1),fp2
 		fmove.s SURF_D_ZISTEPV(a1),fp3
@@ -485,11 +486,11 @@ _R_GenerateSpans
 		fmul    fp0,fp6                 ;fp3 = fu * surf2->d_zistepu
 		fadd    fp6,fp5                 ;testzi = d_ziorigin + fp1 + fp3
 		fcmp    fp5,fp2                 ;if (newzibottom >= testzi)
-		fbge.b  .le_newtop              ;goto newtop
+		fbge.w  .le_newtop              ;goto newtop
 		fcmp    fp5,fp3                 ;if (newzitop >= testzi)
-		fblt.b  .le_search
+		fblt.w  .le_search
 		fcmp    fp7,fp4                 ;if (surf->d_zistepu >= surf2->d_zistepu)
-		fbge.b  .le_newtop              ;goto newtop
+		fbge.w  .le_newtop              ;goto newtop
 
 *                        do
 *                        {
@@ -510,7 +511,7 @@ _R_GenerateSpans
 *                                if (!surf->insubmodel)
 *                                        goto continue_search;
 
-		bne.w   .le_gotposition
+		bne.b   .le_gotposition
 		tst.b   d5
 		beq.b   .le_search
 		tst     d3
@@ -520,7 +521,7 @@ _R_GenerateSpans
 		sub.l   #$fffff,d0              ;edge->u - 0xFFFFF
 		fmove.l d0,fp0                  ;(float)(edge->u - 0xFFFFF)
 		;fmul.s  #(1.0/(16*65536)),fp0   ;fu = fp0 * (1 / $100000)
-		fmul.s  #0.0000009536744,fp0
+		fmul.s	#0.000000954,fp0
 		fmove.s _fv,fp1                 ;fv
 		fmove.s SURF_D_ZIORIGIN(a1),fp2
 		fmove.s SURF_D_ZISTEPV(a1),fp3
@@ -572,12 +573,12 @@ _R_GenerateSpans
 		fmul    fp0,fp6                 ;fp3 = fu * surf2->d_zistepu
 		fadd    fp6,fp5                 ;testzi = d_ziorigin + fp1 + fp3
 		fcmp    fp5,fp2                 ;if (newzibottom >= testzi)
-		fbge.b  .le_gotposition         ;goto gotposition
+		fbge.w  .le_gotposition         ;goto gotposition
 		fcmp    fp5,fp3                 ;if (newzitop >= testzi)
-		fblt.b  .le_search
+		fblt.w  .le_search
 		fcmp    fp7,fp4                 ;if (surf->d_zistepu >= surf2->d_zistepu)
-		fbge.b  .le_gotposition         ;goto gotposition
-		bra.w   .le_search
+		fbge.w  .le_gotposition         ;goto gotposition
+		bra.b   .le_search
 
 *                // emit a span (obscures current top)
 *                        iu = edge->u >> 20;
@@ -627,7 +628,7 @@ _R_GenerateSpans
 		move.l  EDGE_NEXT(a5),a5
 .try
 		cmp.l   a5,a6
-		bne.w   .loop
+		bne.b   .loop
 		move.l  a4,_span_p
 		jsr     _R_CleanupSpan
 		fmovem.x        (sp)+,fp2-fp7

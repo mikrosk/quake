@@ -339,7 +339,7 @@ DoRecursion
 		sub.l   d3,d6                   ;d = lp1[1] - lp3[1]
 		addq.l  #1,d6
 		cmp.l   #2,d6                   ;if (d < -1 || d > 1)
-		bls.w   .exit
+		bls.b   .exit
 
 *split3:
 *                temp = lp1;
@@ -604,7 +604,7 @@ _D_PolysetCalcGradients
 		fmove.l d3,fp3                  ;fp3 = p11_minus_p21
 
 		fmove.l _d_xdenom,fp4
-		fmove.w #1,fp5
+		fmove.s #1,fp5
 		fdiv    fp4,fp5                 ;fp5 = 1.0 / (float)d_xdenom
 		fneg    fp5,fp6                 ;fp6 = ystepdenominv
 		fmul    fp5,fp1
@@ -1163,7 +1163,7 @@ _D_RasterizeAliasPolySmooth
 
 		move.l  _pedgetable,a0
 		cmp.l   #2,ETAB_NUMLEFTEDGES(a0)
-		bne.w   .cont
+		bne.b   .cont
 		move.l  a3,a6
 		move.l  ETAB_PLEV2(a0),a3
 		move.l  4(a3),d5

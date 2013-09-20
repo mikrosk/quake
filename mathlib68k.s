@@ -11,11 +11,21 @@
 	code
 
 	xref    _Sys_Error
+	IFND	M881
+	IFD	STORMC
+	xref    _sin__r
+	xref    _cos__r
+	ELSE
+	xref	_sin
+	xref	_cos
+	ENDC
+	ENDC
 
 	xdef    _anglemod
-
+	xdef    _anglemod__r
 	cnop    0,4
 _anglemod:
+_anglemod__r:
 	setso   4
 .a      so.s    1
 
@@ -28,15 +38,17 @@ _anglemod:
 	swap    d0
 	fmove.l d0,fp0
 	fmul.s  #0.0054931641,fp0
-	fmove.s	fp0,d0	; GCC 4.5.x fix !!!
+	IFD	ATARI
+	fmove.s	fp0,d0
+	ENDC
 	rts
 
 
 	xdef    _BoxOnPlaneSide
-
+	xdef    _BoxOnPlaneSide__r
 	cnop    0,4
 _BoxOnPlaneSide:
-
+_BoxOnPlaneSide__r:
 	move.l  a2,d1
 	fmovem.x fp2-fp6,-(sp)
 	setso   4+5*12
@@ -237,10 +249,10 @@ _BoxOnPlaneSide:
 
 
 	xdef    _AngleVectors
-
+	xdef    _AngleVectors__r
 	cnop    0,4
 _AngleVectors:
-
+_AngleVectors__r:
 	fmovem.x fp2-fp7,-(sp)
 	move.l  a2,-(sp)
 	setso   4+6*12+1*4
@@ -257,21 +269,70 @@ _AngleVectors:
 ; cp = cos(angle);
 	fmove   fp5,fp2
 	fmul.s  (a2)+,fp2
+	IFD     M881
 	fsincos fp2,fp6:fp3
+	ELSE
+	fmove.d fp2,-(sp)
+	IFD	STORMC
+	jsr     _sin__r
+	ELSE
+	jsr	_sin
+	ENDC
+	fmove   fp0,fp3                 ; sp
+	IFD	STORMC
+	jsr     _cos__r
+	ELSE
+	jsr	_cos
+	ENDC
+	fmove   fp0,fp6                 ; cp
+	ENDC
 
 ; angle = angles[YAW] * (M_PI*2 / 360);
 ; sy = sin(angle);
 ; cy = cos(angle);
 	fmove   fp5,fp2
 	fmul.s  (a2)+,fp2
+	IFD     M881
 	fsincos fp2,fp7:fp4
+	ELSE
+	fmove.d fp2,(sp)
+	IFD	STORMC
+	jsr     _sin__r
+	ELSE
+	jsr	_sin
+	ENDC
+	fmove   fp0,fp4                 ; sy
+	IFD	STORMC
+	jsr     _cos__r
+	ELSE
+	jsr	_cos
+	ENDC
+	fmove   fp0,fp7                 ; cy
+	ENDC
 
 ; angle = angles[ROLL] * (M_PI*2 / 360);
 ; sr = sin(angle);
 ; cr = cos(angle);
 	fmove   fp5,fp2
 	fmul.s  (a2)+,fp2
+	IFD     M881
 	fsincos fp2,fp5:fp2
+	ELSE
+	fmove.d fp2,(sp)
+	IFD	STORMC
+	jsr     _sin__r
+	ELSE
+	jsr	_sin
+	ENDC
+	fmove   fp0,fp2                 ; sr
+	IFD	STORMC
+	jsr     _cos__r
+	ELSE
+	jsr	_cos
+	ENDC
+	fmove   fp0,fp5                 ; cr
+	addq.w  #8,sp
+	ENDC
 
 ; forward[0] = cp*cy;
 ; forward[1] = cp*sy;
@@ -331,10 +392,10 @@ _AngleVectors:
 
 
 	xdef    _VectorCompare
-
+	xdef    _VectorCompare__r
 	cnop    0,4
 _VectorCompare:
-
+_VectorCompare__r:
 	setso   4
 .v1     so.l    1
 .v2     so.l    1
@@ -356,10 +417,10 @@ _VectorCompare:
 	rts
 
 	xdef    _VectorMA
-
+	xdef    _VectorMA__r
 	cnop    0,4
 _VectorMA:
-
+_VectorMA__r:
 	setso   4
 .veca   so.l    1
 .scale  so.s    1
@@ -386,10 +447,10 @@ _VectorMA:
 	rts
 
 	xdef    __DotProduct
-
+	xdef    __DotProduct__r
 	cnop    0,4
 __DotProduct:
-
+__DotProduct__r:
 	setso   4
 .v1     so.l    1
 .v2     so.l    1
@@ -407,10 +468,10 @@ __DotProduct:
 	rts
 
 	xdef    __VectorSubtract
-
+	xdef    __VectorSubtract__r
 	cnop    0,4
 __VectorSubtract:
-
+__VectorSubtract__r:
 	setso   4
 .veca   so.l    1
 .vecb   so.l    1
@@ -434,10 +495,10 @@ __VectorSubtract:
 
 
 	xdef    __VectorAdd
-
+	xdef    __VectorAdd__r
 	cnop    0,4
 __VectorAdd:
-
+__VectorAdd__r:
 	setso   4
 .veca   so.l    1
 .vecb   so.l    1
@@ -461,10 +522,10 @@ __VectorAdd:
 
 
 	xdef    __VectorCopy
-
+	xdef    __VectorCopy__r
 	cnop    0,4
 __VectorCopy:
-
+__VectorCopy__r:
 	setso   4
 .in     so.l    1
 .out    so.l    1
@@ -478,10 +539,10 @@ __VectorCopy:
 
 
 	xdef    _CrossProduct
-
+	xdef    _CrossProduct__r
 	cnop    0,4
 _CrossProduct:
-
+_CrossProduct__r:
 	fmovem.x fp2-fp5,-(sp)
 	setso   4+4*12
 .v1     so.l    1
@@ -522,10 +583,10 @@ _CrossProduct:
 
 
 	xdef    _Length
-
+	xdef    _Length__r
 	cnop    0,4
 _Length:
-
+_Length__r:
 	setso   4
 .v      so.l    1
 
@@ -543,15 +604,17 @@ _Length:
 	fmul    fp1,fp1
 	fadd    fp1,fp0
 	fsqrt   fp0
-	fmove.s	fp0,d0	; GCC 4.5.x fix !!!
+	IFD	ATARI
+	fmove.s	fp0,d0
+	ENDC
 	rts
 
 
 	xdef    _VectorNormalize
-
+	xdef    _VectorNormalize__r
 	cnop    0,4
 _VectorNormalize:
-
+_VectorNormalize__r:
 	fmovem.x fp2-fp4,-(sp)
 	setso   4+3*12
 .v      so.l    1
@@ -591,16 +654,17 @@ _VectorNormalize:
 	fmul    fp1,fp4
 	fmove.s fp4,(a0)
 .1:     fmovem.x (sp)+,fp2-fp4
-
-	fmove.s	fp0,d0	; GCC 4.5.x fix !!! 
+	IFD	ATARI
+	fmove.s	fp0,d0
+	ENDC
 	rts
 
 
 	xdef    _VectorInverse
-
+	xdef    _VectorInverse__r
 	cnop    0,4
 _VectorInverse:
-
+_VectorInverse__r:
 	setso   4
 .v      so.l    1
 
@@ -618,10 +682,10 @@ _VectorInverse:
 
 
 	xdef    _VectorScale
-
+	xdef    _VectorScale__r
 	cnop    0,4
 _VectorScale:
-
+_VectorScale__r:
 	setso   4
 .in     so.l    1
 .scale  so.l    1
@@ -645,10 +709,10 @@ _VectorScale:
 
 
 	xdef    _Q_log2
-
+	xdef    _Q_log2__r
 	cnop    0,4
 _Q_log2:
-
+_Q_log2__r:
 	setso   4
 .val    so.l    1
 
@@ -662,10 +726,10 @@ _Q_log2:
 	rts
 
 	xdef    _R_ConcatRotations
-
+	xdef    _R_ConcatRotations__r
 	cnop    0,4
 _R_ConcatRotations:
-
+_R_ConcatRotations__r:
 	fmovem.x fp2/fp4/fp5/fp6,-(sp)
 	move.l  a2,d1
 	setso   4+4*12
@@ -776,10 +840,10 @@ _R_ConcatRotations:
 
 
 	xdef    _R_ConcatTransforms
-
+	xdef    _R_ConcatTransforms__r
 	cnop    0,4
 _R_ConcatTransforms:
-
+_R_ConcatTransforms__r:
 	fmovem.x fp2/fp4/fp5/fp6,-(sp)
 	move.l  a2,d1
 	setso   4+4*12
@@ -923,10 +987,10 @@ _R_ConcatTransforms:
 
 
 	xdef    _FloorDivMod
-
+	xdef    _FloorDivMod__r
 	cnop    0,4
 _FloorDivMod:
-
+_FloorDivMod__r:
 	setso   4+4
 .numer  so.d    1
 .denom  so.d    1
@@ -990,10 +1054,10 @@ _FloorDivMod:
 	
 
 	xdef    _GreatestCommonDivisor
-
+	xdef    _GreatestCommonDivisor__r
 	cnop    0,4
 _GreatestCommonDivisor:
-
+_GreatestCommonDivisor__r:
 	setso   4
 .i1     so.l    1
 .i2     so.l    1
@@ -1014,10 +1078,10 @@ _GreatestCommonDivisor:
 
 
 	xdef    _Invert24To16
-
+	xdef    _Invert24To16__r
 	cnop    0,4
 _Invert24To16:
-
+_Invert24To16__r:
 	move.l  4(sp),d0
 	cmp.l   #256,d0
 	blt.b   .1

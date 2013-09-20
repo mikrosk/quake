@@ -81,7 +81,7 @@ _D_DrawSkyScans8
 .height
 		fmove.l d0,fp0                  ;temp = (float)r_refdef.vrect.width
 .width
-		fmove.w #8192,fp1
+		fmove.s #8192,fp1
 		fdiv    fp0,fp1                 ;fp1 = 8192 / temp
 		move.l  _r_skysource,a5
 .loop
@@ -95,7 +95,7 @@ _D_DrawSkyScans8
 		add.l   d3,d0
 		add.l   d0,a0                   ;pdest = d_viewbuffer + pspan->u + d0
 
-		fmove.w #4096,fp7
+		fmove.s #4096,fp7
 		lea     _vpn,a2
 		fmove.s (a2)+,fp5
 		fmul    fp7,fp5                 ;fp5 = 4096*vpn[0]
@@ -129,14 +129,14 @@ _D_DrawSkyScans8
 		fmul    fp1,fp4                 ;fp4 = 8192 * vright[2] / temp
 		fmove.s fp2,.vr0(sp)
 		fmove.s fp3,.vr1(sp)
-		fmove.w #3,fp1
+		fmove.s #3,fp1
 		fmul    fp1,fp7                 ;multiply by 3
 		fmul    fp1,fp4
 		fmove.s fp4,.vr2(sp)
 		move.l  (a6)+,d1                ;count = pspan->count
 		fmove.s _skytime,fp0
 		fmul.s  _skyspeed,fp0
-		fmul.l  #65536,fp0
+		fmul.s  #65536,fp0
 		fmove.l fp0,d0                  ;d0 = skytime*skyspeed*$10000
 		move.l  d0,a4
 
@@ -161,7 +161,7 @@ _D_DrawSkyScans8
 		fmul    fp0,fp0
 		fadd    fp0,fp2
 		fsqrt   fp2                     ;fp2 = length(end)
-		fmove.l #(65536*6*(SKYSIZE/2-1)),fp0
+		fmove.s #(65536*6*(SKYSIZE/2-1)),fp0
 		fdiv    fp2,fp0
 		fmul    fp0,fp1                 ;fp1 = 6*(SKYSIZE/2-1)*end[0]
 		fmul    fp0,fp4                 ;fp4 = 6*(SKYSIZE/2-1)*end[1]
@@ -239,7 +239,7 @@ _D_DrawSkyScans8
 		fmul    fp0,fp0
 		fadd    fp0,fp2
 		fsqrt   fp2                     ;fp2 = length(end)
-		fmove.l #(65536*6*(SKYSIZE/2-1)),fp0
+		fmove.s #(65536*6*(SKYSIZE/2-1)),fp0
 		fdiv    fp2,fp0
 		fmul    fp0,fp1                 ;fp1 = 6*(SKYSIZE/2-1)*end[0]
 		fmul    fp0,fp4                 ;fp4 = 6*(SKYSIZE/2-1)*end[1]
@@ -283,7 +283,7 @@ _D_DrawSkyScans8
 		fmul    fp0,fp0
 		fadd    fp0,fp2
 		fsqrt   fp2                     ;fp2 = length(end)
-		fmove.l #(65536*6*(SKYSIZE/2-1)),fp0
+		fmove.s #(65536*6*(SKYSIZE/2-1)),fp0
 		fdiv    fp2,fp0
 		fmul    fp0,fp1                 ;fp1 = 6*(SKYSIZE/2-1)*end[0]
 		fmul    fp0,fp4                 ;fp4 = 6*(SKYSIZE/2-1)*end[1]

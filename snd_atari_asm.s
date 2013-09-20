@@ -8,51 +8,51 @@
 **
 **    16-bits STEREO for AHI.
 **    DMA buffer layout (16 bits signed big-endian samples):
-**    <-- shm.samples * (<16bits left ch.>|<16 bits right ch.>) -->
+**    <-- shm.samples * (<16bits left ch.>;<16 bits right ch.>) -->
 **
 
-	.include	"quakedef68k.i"
+	include	"quakedef68k.i"
 
 
-	.text
+	text
 
-	.globl	_shm
-	.globl	_paintbuffer
-	.globl	_paintedtime
-	.globl	_volume
-	
-	.globl	_sound_atari_init
-	.globl	_sound_atari_shutdown
+	XREF	_shm
+	XREF	_paintbuffer
+	XREF	_paintedtime
+	XREF	_volume
+
+	XREF	_sound_atari_init
+	XREF	_sound_atari_shutdown
 
 
-	.globl	_S_TransferPaintBuffer
-	.align	4
+	XREF	_S_TransferPaintBuffer
+	CNOP	0,4
 _S_TransferPaintBuffer:
 	movem.l	d2-d7/a2-a3,-(sp)
 
-	move.l	_shm,a1			| a1 shm (struct dma_t)
-	lea	_paintbuffer,a0		| a0 paintbuffer (int left,int right)
-	fmove.s	_volume+16,fp0		| volume.value * 256
-	move.l	4+8*4(sp),d2		| endtime
+	move.l	_shm,a1			; a1 shm (struct dma_t)
+	lea	_paintbuffer,a0		; a0 paintbuffer (int left,int right)
+	fmove.s	_volume+16,fp0		; volume.value * 256
+	move.l	4+8*4(sp),d2		; endtime
 	fmul.w	#256,fp0
 	move.l	_paintedtime,d6
-	sub.l	d6,d2			| d2 count
+	sub.l	d6,d2			; d2 count
 	beq	exit
-	move.l	dma_buffer(a1),a3	| a3 dma buffer start address
-	fmove.l	fp0,d3			| d3 snd_vol
+	move.l	dma_buffer(a1),a3	; a3 dma buffer start address
+	fmove.l	fp0,d3			; d3 snd_vol
 	move.l	dma_samples(a1),d0
 
-| 16-bit AHI transfer
-	lea	(a3,d0.l*2),a2		| a2 dma buffer end address
+; 16-bit AHI transfer
+	lea	(a3,d0.l*2),a2		; a2 dma buffer end address
 	lsr.l	#1,d0
 	subq.l	#1,d0
 	and.l	d0,d6
-	lea	(a3,d6.l*4),a1		| a1 out
-	move.l	#0x7fff,d4		| d4 max val
+	lea	(a3,d6.l*4),a1		; a1 out
+	move.l	#$7fff,d4		; d4 max val
 	move.l	d4,d5
-	not.l	d5			| d5 min val
+	not.l	d5			; d5 min val
 	move.l	a2,d6
-	sub.l	a3,d6			| d6 buffer size
+	sub.l	a3,d6			; d6 buffer size
 S_TransferPaintBuffer_loop16:
 	move.l	(a0)+,d0
 	muls.l	d3,d0
@@ -75,7 +75,7 @@ l162:	asr.l	#8,d1
 l163:	cmp.l	d5,d1
 	bge.b	l164
 	move.l	d5,d1
-l164:	move.w	d1,d0			| d0 leftCh16.W | rightCh16.W
+l164:	move.w	d1,d0			; d0 leftCh16.W ; rightCh16.W
 	move.l	d0,(a1)+
 	cmp.l	a2,a1
 	blo.b	l165
@@ -86,75 +86,75 @@ exit:	movem.l	(sp)+,d2-d7/a2-a3
 	rts
 
 
-| void sound_atari_init( void );
+; void sound_atari_init( void );
 
 _sound_atari_init:
 	movem.l	d2-d7/a2-a6,-(sp)
-	
+
 	pea	save_regs
-	move.w	#0x26,-(sp)			| Supexec
-	trap	#14				|
-	addq.l	#6,sp				|
-		
+	move.w	#$26,-(sp)			; Supexec
+	trap	#14				;
+	addq.l	#6,sp				;
+
 	movem.l	(sp)+,d2-d7/a2-a6
 	rts
 
 save_regs:
 	lea	save_audio,a0
-	move.w	0xffff8930.w,(a0)+
-	move.w	0xffff8932.w,(a0)+
-	move.b	0xffff8934.w,(a0)+
-	move.b	0xffff8935.w,(a0)+
-	move.b	0xffff8936.w,(a0)+
-	move.b	0xffff8937.w,(a0)+
-	move.b	0xffff8938.w,(a0)+
-;	move.b	0xffff8939.w,(a0)+
-;	move.w	0xffff893a.w,(a0)+
-	move.b	0xffff893c.w,(a0)+
-	move.b	0xffff8941.w,(a0)+
-	move.b	0xffff8943.w,(a0)+
-	move.b	0xffff8900.w,(a0)+
-	move.b	0xffff8901.w,(a0)+
-	move.b	0xffff8920.w,(a0)+
-	move.b	0xffff8921.w,(a0)+
+	move.w	$ffff8930.w,(a0)+
+	move.w	$ffff8932.w,(a0)+
+	move.b	$ffff8934.w,(a0)+
+	move.b	$ffff8935.w,(a0)+
+	move.b	$ffff8936.w,(a0)+
+	move.b	$ffff8937.w,(a0)+
+	move.b	$ffff8938.w,(a0)+
+;	move.b	$ffff8939.w,(a0)+
+;	move.w	$ffff893a.w,(a0)+
+	move.b	$ffff893c.w,(a0)+
+	move.b	$ffff8941.w,(a0)+
+	move.b	$ffff8943.w,(a0)+
+	move.b	$ffff8900.w,(a0)+
+	move.b	$ffff8901.w,(a0)+
+	move.b	$ffff8920.w,(a0)+
+	move.b	$ffff8921.w,(a0)+
 	rts
-	
 
-| void sound_atari_shutdown( void );
+
+; void sound_atari_shutdown( void );
 
 _sound_atari_shutdown:
 	movem.l	d2-d7/a2-a6,-(sp)
-	
+
 	pea	restore_regs
-	move.w	#0x26,-(sp)			| Supexec
-	trap	#14				|
-	addq.l	#6,sp				|
-		
+	move.w	#$26,-(sp)			; Supexec
+	trap	#14				;
+	addq.l	#6,sp				;
+
 	movem.l	(sp)+,d2-d7/a2-a6
 	rts
 
 restore_regs:
 	lea	save_audio,a0
-	move.w	(a0)+,0xffff8930.w
-	move.w	(a0)+,0xffff8932.w
-	move.b	(a0)+,0xffff8934.w
-	move.b	(a0)+,0xffff8935.w
-	move.b	(a0)+,0xffff8936.w
-	move.b	(a0)+,0xffff8937.w
-	move.b	(a0)+,0xffff8938.w
-;	move.b	(a0)+,0xffff8939.w
-;	move.w	(a0)+,0xffff893a.w
-	move.b	(a0)+,0xffff893c.w
-	move.b	(a0)+,0xffff8941.w
-	move.b	(a0)+,0xffff8943.w
-	move.b	(a0)+,0xffff8900.w
-	move.b	(a0)+,0xffff8901.w
-	move.b	(a0)+,0xffff8920.w
-	move.b	(a0)+,0xffff8921.w
+	move.w	(a0)+,$ffff8930.w
+	move.w	(a0)+,$ffff8932.w
+	move.b	(a0)+,$ffff8934.w
+	move.b	(a0)+,$ffff8935.w
+	move.b	(a0)+,$ffff8936.w
+	move.b	(a0)+,$ffff8937.w
+	move.b	(a0)+,$ffff8938.w
+;	move.b	(a0)+,$ffff8939.w
+;	move.w	(a0)+,$ffff893a.w
+	move.b	(a0)+,$ffff893c.w
+	move.b	(a0)+,$ffff8941.w
+	move.b	(a0)+,$ffff8943.w
+	move.b	(a0)+,$ffff8900.w
+	move.b	(a0)+,$ffff8901.w
+	move.b	(a0)+,$ffff8920.w
+	move.b	(a0)+,$ffff8921.w
 	rts
 
 
-	.bss
+	bss
 
 save_audio:
 	ds.b	19

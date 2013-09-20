@@ -37,7 +37,7 @@
 		XDEF    _D_WarpScreen
 		XDEF    _Turbulent8
 		XDEF    _D_DrawSpans8
-		XDEF    _D_DrawSpans16
+		XDEF	_D_DrawSpans16
 		XDEF    _D_DrawZSpans
 
 QDIV                    =       1
@@ -87,7 +87,7 @@ _D_WarpScreen
 *        wratio = w / (float)scr_vrect.width;
 *        hratio = h / (float)scr_vrect.height;
 
-		fmove.w #AMP2*2,fp2
+		fmove.s #AMP2*2,fp2
 		fmove   fp2,fp3
 		fadd    fp0,fp2                 ;fp2 = w + AMP2*2
 		fadd    fp1,fp3                 ;fp3 = h + AMP2*2
@@ -165,7 +165,7 @@ _D_WarpScreen
 		move.l  VRECT_HEIGHT(a5),d7
 
 		fmove.d _cl+CL_TIME,fp0         ;get cl.time
-		fmul.w  #SPEED,fp0              ;fp0 = cl.time*SPEED
+		fmul.s  #SPEED,fp0              ;fp0 = cl.time*SPEED
 		fmove.l fp0,d4                  ;(int)(cl.time*SPEED)
 		and.l   #CYCLE-1,d4             ;(int)(cl.time*SPEED)&(CYCLE-1)
 		lsl.l   #2,d4
@@ -293,13 +293,13 @@ _Turbulent8
 *
 
 		fmove.d _cl+CL_TIME,fp0         ;get cl.time
-		fmul.w  #SPEED,fp0              ;fp0 = cl.time*SPEED
+		fmul.s  #SPEED,fp0              ;fp0 = cl.time*SPEED
 		fmove.l fp0,d0                  ;(int)(cl.time*SPEED)
 		and.l   #CYCLE-1,d0             ;(int)(cl.time*SPEED)&(CYCLE-1)
 		lsl.l   #2,d0
 		add.l   #_sintable,d0           ;r_turb_turb = _sintable + 4*d0
 		move.l  d0,a6
-		fmove.w #16,fp7
+		fmove.s #16,fp7
 		fmove.s .szstpu(sp),fp3
 		fmul    fp7,fp3                 ;sdivz16stepu = d_sdivzstepu * 16
 		fmove.s .tzstpu(sp),fp4
@@ -336,7 +336,7 @@ _Turbulent8
 		fmul.s  (a1)+,fp7               ;fp7 = dv * d_zistepv
 		fadd    fp7,fp2
 		fadd.s  (a1)+,fp2               ;zi = d_ziorigin + fp2 + fp7
-		fmove.l #65536,fp6
+		fmove.s #65536,fp6
 		fdiv    fp2,fp6                 ;z = (float)0x10000 / zi
 
 *                s = (int)(sdivz * z) + sadjust;
@@ -454,7 +454,7 @@ _Turbulent8
 		fadd    fp3,fp0                 ;sdivz += sdivz16stepu
 		fadd    fp4,fp1                 ;tdivz += tdivz16stepu
 		fadd    fp5,fp2                 ;zi += zi16stepu
-		fmove.l #65536,fp7
+		fmove.s #65536,fp7
 		fdiv    fp2,fp7                 ;z = (float)0x10000 / zi;
 		fmove   fp7,fp6
 		fmul    fp0,fp6                 ;fp2 = sdivz * z
@@ -548,7 +548,7 @@ _Turbulent8
 		fadd    fp6,fp1                 ;tdivz += fp6
 		fmul.s  .zistpu(sp),fp7         ;fp7 = d_zistepu * spancountminus1
 		fadd    fp7,fp2                 ;zi += fp7
-		fmove.l #65536,fp7
+		fmove.s #65536,fp7
 		fdiv    fp2,fp7                 ;z = (float)0x10000 / zi;
 		fmove   fp7,fp6
 		fmul    fp0,fp6                 ;fp6 = sdivz * z
@@ -752,7 +752,7 @@ _D_DrawSpans8
 ******  Prologue. Global variables are put into registers or onto the stackframe
 
 		fmove.s _d_subdiv16+CVAR_VALUE,fp0
-		fcmp.w  #0,fp0
+		fcmp.s  #0,fp0
 		fbne    _D_DrawSpans16
 		movem.l d2-d7/a2-a6,-(sp)
 		fmovem.x        fp2-fp7,-(sp)
@@ -797,7 +797,7 @@ _D_DrawSpans8
 *
 
 		move.l  _cacheblock,a1          ;pbase = (unsigned char *)cacheblock
-		fmove.w #8,fp7
+		fmove.s #8,fp7
 		fmove.s .szstpu(sp),fp3
 		fmul    fp7,fp3                 ;sdivz8stepu = d_sdivzstepu * 8
 		fmove.s .tzstpu(sp),fp4
@@ -834,7 +834,7 @@ _D_DrawSpans8
 		fmul.s  (a6)+,fp7               ;fp7 = dv * d_zistepv
 		fadd    fp7,fp2
 		fadd.s  (a6)+,fp2               ;zi = d_ziorigin + fp2 + fp7
-		fmove.l #65536,fp6
+		fmove.s #65536,fp6
 		fdiv    fp2,fp6                 ;z = (float)0x10000 / zi
 
 *                s = (int)(sdivz * z) + sadjust;
@@ -947,7 +947,7 @@ _D_DrawSpans8
 		fadd    fp3,fp0                 ;sdivz += sdivz8stepu
 		fadd    fp4,fp1                 ;tdivz += tdivz8stepu
 		fadd    fp5,fp2                 ;zi += zi8stepu
-		fmove.l #65536,fp7
+		fmove.s #65536,fp7
 		fdiv    fp2,fp7                 ;z = (float)0x10000 / zi;
 		fmove   fp7,fp6
 		fmul    fp0,fp6                 ;fp2 = sdivz * z
@@ -1041,7 +1041,7 @@ _D_DrawSpans8
 		fadd    fp6,fp1                 ;tdivz += fp6
 		fmul.s  .zistpu(sp),fp7         ;fp7 = d_zistepu * spancountminus1
 		fadd    fp7,fp2                 ;zi += fp7
-		fmove.l #65536,fp7
+		fmove.s #65536,fp7
 		fdiv    fp2,fp7                 ;z = (float)0x10000 / zi;
 		fmove   fp7,fp6
 		fmul    fp0,fp6                 ;fp6 = sdivz * z
@@ -1351,7 +1351,7 @@ _D_DrawSpans16
 *
 
 		move.l  _cacheblock,a1          ;pbase = (unsigned char *)cacheblock
-		fmove.w #16,fp7
+		fmove.s #16,fp7
 		fmove.s .szstpu(sp),fp3
 		fmul    fp7,fp3                 ;sdivz16stepu = d_sdivzstepu * 16
 		fmove.s .tzstpu(sp),fp4
@@ -1388,7 +1388,7 @@ _D_DrawSpans16
 		fmul.s  (a6)+,fp7               ;fp7 = dv * d_zistepv
 		fadd    fp7,fp2
 		fadd.s  (a6)+,fp2               ;zi = d_ziorigin + fp2 + fp7
-		fmove.l #65536,fp6
+		fmove.s #65536,fp6
 		fdiv    fp2,fp6                 ;z = (float)0x10000 / zi
 
 *                s = (int)(sdivz * z) + sadjust;
@@ -1501,7 +1501,7 @@ _D_DrawSpans16
 		fadd    fp3,fp0                 ;sdivz += sdivz16stepu
 		fadd    fp4,fp1                 ;tdivz += tdivz16stepu
 		fadd    fp5,fp2                 ;zi += zi16stepu
-		fmove.l #65536,fp7
+		fmove.s #65536,fp7
 		fdiv    fp2,fp7                 ;z = (float)0x10000 / zi;
 		fmove   fp7,fp6
 		fmul    fp0,fp6                 ;fp2 = sdivz * z
@@ -1595,7 +1595,7 @@ _D_DrawSpans16
 		fadd    fp6,fp1                 ;tdivz += fp6
 		fmul.s  .zistpu(sp),fp7         ;fp7 = d_zistepu * spancountminus1
 		fadd    fp7,fp2                 ;zi += fp7
-		fmove.l #65536,fp7
+		fmove.s #65536,fp7
 		fdiv    fp2,fp7                 ;z = (float)0x10000 / zi;
 		fmove   fp7,fp6
 		fmul    fp0,fp6                 ;fp6 = sdivz * z
@@ -1945,10 +1945,7 @@ _D_DrawZSpans
 		fmove.s _d_ziorigin,fp5
 		fmove.s _d_zistepv,fp6
 		fmove.s _d_zistepu,fp7
-		;fmove.l #32768*65536,fp0
-		move.l	#32678,d0
-		swap	d0
-		fmove.l	d0,fp0			; STUPID GNU AS !!!!!!!!!!!
+		fmove.s #32768*65536,fp0
 
 *        izistep = (int)(d_zistepu * 0x8000 * 0x10000);
 
@@ -2049,7 +2046,6 @@ _D_DrawZSpans
 		fmovem.x        (sp)+,fp3-fp7
 		movem.l (sp)+,d2-d7/a2
 		rts
-
 
 ReciprocTable
 		dc.w    0

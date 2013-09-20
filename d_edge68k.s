@@ -142,7 +142,7 @@ _D_CalcGradients
 		move.l  _miplevel,d1            ;d1 = miplevel
 		asl.l   d1,d0
 		fmove.l d0,fp1
-		fmove.w #1,fp0
+		fmove.s #1,fp0
 		fdiv    fp1,fp0                 ;fp0 = mipscale
 		fmove.s fp0,-(sp)
 
@@ -217,7 +217,7 @@ _D_CalcGradients
 		fmove.s (sp)+,fp7               ;fp7 = mipscale
 		fmul    fp7,fp3
 		fmul    fp7,fp4
-		fmove.l #65536,fp0
+		fmove.s #65536,fp0
 		fmove.s #0.5,fp1
 		fmul    fp0,fp7
 		move.l  MSURFACE_TEXINFO(a0),a1
@@ -390,7 +390,7 @@ _D_DrawSurfaces
 		cmp.l   d2,a2
 		bge.w   .end
 		tst.l   SURF_SPANS(a2)
-		beq.w   .next2
+		beq.b   .next2
 
 *                        r_drawnpolycount++;
 *
@@ -444,7 +444,7 @@ _D_DrawSurfaces
 		move.l  d0,d1
 		and.l   #SURF_DRAWBACKGROUND,d1
 		beq.b   .nobackground
-		fmove.w #0,fp0
+		fmove.s #0,fp0
 		fmove.s fp0,_d_zistepu
 		fmove.s fp0,_d_zistepv
 		fmove.s #-0.9,fp0
@@ -497,7 +497,7 @@ _D_DrawSurfaces
 *                                }
 
 		tst.l   SURF_INSUBMODEL(a2)
-		beq.w   .nosub
+		beq.b   .nosub
 		move.l  SURF_ENTITY(a2),a0
 		move.l  a0,_currententity
 		lea     ENTITY_ORIGIN(a0),a0
@@ -685,7 +685,7 @@ _D_DrawSurfaces
 *                                }
 
 		tst.l   SURF_INSUBMODEL(a2)
-		beq.w   .nosub2
+		beq.b   .nosub2
 		move.l  SURF_ENTITY(a2),a0
 		move.l  a0,_currententity
 		lea     ENTITY_ORIGIN(a0),a0
@@ -759,13 +759,13 @@ _D_DrawSurfaces
 		lea     _d_scalemip,a1
 		moveq   #0,d0
 		fcmp.s  (a1),fp0
-		fboge.b .found
+		fboge.w .found
 		moveq   #1,d0
 		fcmp.s  4(a1),fp0
-		fboge.b .found
+		fboge.w .found
 		moveq   #2,d0
 		fcmp.s  8(a1),fp0
-		fboge.b .found
+		fboge.w .found
 		moveq   #3,d0
 .found		move.l  _d_minmip,d1
 		cmp.l   d1,d0

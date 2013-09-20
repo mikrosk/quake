@@ -37,7 +37,8 @@ PLANE_X                 =       0
 PLANE_Y                 =       1
 PLANE_Z                 =       2
 SURF_PLANEBACK          =       2
-|BACKFACE_EPSILON        equ.s   0.01            ;r_local.h
+;TODO: vasm limitation
+;BACKFACE_EPSILON        equ.s   0.01            ;r_local.h
 MAX_BTOFPOLYS           =       5000
 PITCH                   =       0
 YAW                     =       1
@@ -60,7 +61,7 @@ _R_RotateBmodel
 		lea     _entity_rotation,a3
 		move.l  _currententity,a0
 		lea     sincostab,a1
-		fmove.w #8,fp7
+		fmove.s #8,fp7
 		fmove.s ENTITY_ANGLES+YAW*4(a0),fp0
 		fmul    fp7,fp0
 		fmove.l fp0,d0                  ;d0 = angle
@@ -292,7 +293,7 @@ DoRecursion
 *                for (i=0 ; i<4 ; i++)
 
 		tst.l   d2
-		beq.w   .noclip
+		beq.b   .noclip
 		move.l  d2,d1
 		moveq   #4-1,d0
 		lea     _pfrustum_indexes,a0
@@ -304,7 +305,7 @@ DoRecursion
 
 .loop
 		lsr.b   #1,d1                   ; if (! (clipflags & (1<<i))
-		bcc.w   .next
+		bcc.b   .next
 
 *                        pindex = pfrustum_indexes[i];
 *
@@ -362,7 +363,7 @@ DoRecursion
 		fadd    fp2,fp0                 ;d = DotProduct(...)
 		fsub    fp6,fp0                 ;d -= view_clipplanes[1].dist
 		ftst    fp0                     ;if (d >= 0)
-		fbolt.b .next
+		fbolt.w .next
 		bclr    d4,d2                   ;clipflags &= ~(1<<i)
 .next
 		addq    #1,d4
@@ -478,7 +479,7 @@ DoRecursion
 
 .cont3
 		ftst    fp2                     ;if (dot >= 0)
-		fbolt.b .lt
+		fbolt.w .lt
 		moveq   #0,d3                   ;side = 0
 		bra.b   .ge
 .lt
@@ -511,8 +512,9 @@ DoRecursion
 		move    NODE_FIRSTSURFACE(a2),d0
 		asl.l   #MSURFACE_SIZEOF_EXP,d0
 		add.l   d0,a3
-		fcmp.s  #-0.01,fp2   ;if (dot < -BACKFACE_EPSILON)
-		fboge.b .else2
+		;fcmp.s  #-BACKFACE_EPSILON,fp2   ;if (dot < -BACKFACE_EPSILON)
+		fcmp.s	#-0.01,fp2
+		fboge.w .else2
 
 *                                        if ((surf->flags & SURF_PLANEBACK) &&
 *                                                (surf->visframe == r_framecount))
@@ -582,8 +584,9 @@ DoRecursion
 *                        else if (dot > BACKFACE_EPSILON)
 *                        {
 
-		fcmp.s  #0.01,fp2
-		fbole.b .else3
+		;fcmp.s  #BACKFACE_EPSILON,fp2
+		fcmp.s	#0.01,fp2
+		fbole.w .else3
 
 *                                        if (!(surf->flags & SURF_PLANEBACK) &&
 *                                                (surf->visframe == r_framecount))

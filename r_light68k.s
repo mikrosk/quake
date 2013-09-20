@@ -90,12 +90,12 @@ DoRecursion
 		fsub    fp0,fp2                 ;fp2 = back
 		moveq   #1,d2                   ;side = front < 0
 		ftst    fp4
-		fbolt.b .cont
+		fbolt.w .cont
 		moveq   #0,d2
 .cont
 		moveq   #1,d3                   ;d3 = back < 0
 		ftst    fp2
-		fbolt.b .cont2
+		fbolt.w .cont2
 		moveq   #0,d3
 .cont2
 		move.l  d2,d7
