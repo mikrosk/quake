@@ -32,7 +32,6 @@ LDFLAGS=-lm
 
 DO_CC=$(CC) $(CFLAGS) -o $@ -c $<
 DO_AS=$(AS) -m68060 -Faout -quiet -phxass -DATARI -DM881 -o $@ $<
-DO_DEVPAC2GAS=$(MOUNT_DIR)/devpac2gas.perl $< > $@
 
 #############################################################################
 # SETUP AND BUILD
