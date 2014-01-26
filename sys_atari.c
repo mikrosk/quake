@@ -23,6 +23,7 @@
 
 #include <mint/osbind.h>
 #include <mint/ostruct.h>
+#include <time.h>
 #include <sys/time.h>
 #include <mint/cookie.h>
 
@@ -43,7 +44,6 @@ int g_scancodeShiftDepressed = 0;
 static unsigned char unshiftToAscii[128];
 static unsigned char shiftToAscii[128];
 static unsigned char capsToAscii[128];
-static qboolean isMintPresent = false;
 
 /*
  * TODO:
@@ -74,33 +74,6 @@ int             findhandle (void)
 			return i;
 	Sys_Error ("out of handles");
 	return -1;
-}
-
-long CheckMintPresence( void )
-{
-	typedef struct
-	{
-		long cookie;
-		long value;
-	} COOKIE;
-	COOKIE* pCookie;
-
-	pCookie = *( (COOKIE **)0x5A0L );
-
-	if( pCookie != NULL)
-	{
-		do
-		{
-			if( pCookie->cookie == C_MiNT )
-			{
-				isMintPresent = true;
-				break;
-			}
-
-		} while( (pCookie++)->cookie != 0L );
-	}
-
-	return 0;
 }
 
 void Sys_Init( void )
@@ -200,9 +173,6 @@ void Sys_Init( void )
 	shiftToAscii[0x59] = K_MWHEELUP;	// eiffel only
 	shiftToAscii[0x5a] = K_MWHEELDOWN;	// eiffel only
 	shiftToAscii[0x5b] = '~';	// eiffel only
-
-	// check FreeMiNT presence
-	Supexec( CheckMintPresence );
 }
 
 /*
@@ -341,43 +311,18 @@ void Sys_Quit (void)
 	exit( 0 );
 }
 
-long GetSystemTimerValue( void )
-{
-	return *( (long*)0x4ba );	// system timer value (200 Hz precision)
-}
-
 double Sys_FloatTime (void)
 {
-	struct timeval	tp;
-	struct timezone	tzp;
-	static int		secbase;
-	unsigned long	ticks;
+	static int secbase;
+	clock_t ticks = clock();
 
-
-	if( isMintPresent )
+	if( !secbase )
 	{
-		gettimeofday( &tp, &tzp );
-		
-		if( !secbase )
-		{
-			secbase = tp.tv_sec;	// get seconds
-			return tp.tv_usec/1000000.0;	// get seconds (from microseconds)
-		}
-
-		return ( tp.tv_sec - secbase ) + tp.tv_usec/1000000.0;
+		secbase = (int)( (double)ticks / CLOCKS_PER_SEC );	// get seconds
+		return 0;
 	}
-	else
-	{
-		ticks = (unsigned long)Supexec( GetSystemTimerValue );
 
-		if( !secbase )
-		{
-			secbase = ticks / 200;	// get seconds
-			return ticks / 200.0;	// get seconds
-		}
-
-		return ( ( ticks / 200.0 ) - secbase ) + ticks / 200.0;
-	}
+	return ( (double)ticks / CLOCKS_PER_SEC ) - secbase;
 }
 
 char *Sys_ConsoleInput (void)
