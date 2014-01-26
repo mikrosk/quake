@@ -37,10 +37,10 @@ viddef_t	vid;				// global video state
 #define	BASEWIDTH	320
 #define	BASEHEIGHT	200
 
-byte	vid_buffer[BASEWIDTH*BASEHEIGHT];
-short	zbuffer[BASEWIDTH*BASEHEIGHT];
+//byte	vid_buffer[BASEWIDTH*BASEHEIGHT];
+//short	zbuffer[BASEWIDTH*BASEHEIGHT];
 //byte	surfcache[256*1024];
-byte	surfcache[4*1024*1024];
+//byte	surfcache[4*1024*1024];
 
 char* screen1 = NULL;	// physical screen
 
@@ -106,11 +106,25 @@ void	VID_Init (unsigned char *palette)
 	vid.numpages = 1;
 	vid.colormap = host_colormap;
 	vid.fullbright = 256 - LittleLong (*((int *)vid.colormap + 2048));
-	vid.buffer = vid.conbuffer = vid_buffer;
+	vid.buffer = vid.conbuffer = (byte*)malloc( BASEWIDTH*BASEHEIGHT + 15 );	//vid_buffer;
 	vid.rowbytes = vid.conrowbytes = BASEWIDTH * sizeof( pixel_t );
 	
-	d_pzbuffer = zbuffer;
-	D_InitCaches (surfcache, sizeof(surfcache));
+	d_pzbuffer = (short*)malloc( BASEWIDTH*BASEHEIGHT * sizeof(short) + 15 );	//zbuffer;
+	
+	byte* surfcache = (byte*)malloc( 4*1024*1024 + 15 );
+	
+	if( vid.buffer == NULL || d_pzbuffer == NULL || surfcache == NULL )
+	{
+		Sys_Error( "Not enough memory to buffers!\n" );
+		return;
+	}
+	
+	// we can't release these buffers anymore
+	vid.buffer = vid.conbuffer = (byte*)( ( (long)vid.buffer + 15 ) & 0xfffffff0 );
+	d_pzbuffer = (short*)( ( (long)d_pzbuffer + 15 ) & 0xfffffff0 );
+	surfcache = (byte*)( ( (long)surfcache + 15 ) & 0xfffffff0 );
+	
+	D_InitCaches (surfcache, /*sizeof(surfcache)*/ 4*1024*1024 );
 	
 	// alloc triplebuffer
 	screen1 = (char*)Mxalloc( 3 * ( vid.width * (vga ? 240 : vid.height) * sizeof( pixel_t ) ) + 15, MX_STRAM );
@@ -133,7 +147,15 @@ void	VID_Init (unsigned char *palette)
 	video_atari_init( screen1 );
 	if( vga )
 	{
-		VsetMode( BPS8 | COL40 | VGA | VERTFLAG );
+		if( isSvPresent )
+		{
+			#define BPS8C 0x0007
+			VsetMode( BPS8C | COL40 | VGA | VERTFLAG );
+		}
+		else
+		{
+			VsetMode( BPS8 | COL40 | VGA | VERTFLAG );
+		}
 	}
 	else
 	{
@@ -158,8 +180,15 @@ void	VID_Update (vrect_t *rects)
 	char* temp;
 	
 	#ifndef NO_ATARI_VIDEO
-	temp = screen + ( isSvPresent ? 0xA0000000 : 0x00000000 );
-	video_atari_c2p( vid.buffer, temp + ( vga ? ( ( 240 - vid.height ) / 2 ) * vid.rowbytes : 0 ), vid.width * vid.height * sizeof( pixel_t ) );
+	if( isSvPresent && vga )
+	{
+		temp = screen + 0xA0000000;
+		video_atari_move16( vid.buffer, temp + ( vga ? ( ( 240 - vid.height ) / 2 ) * vid.rowbytes : 0 ), vid.width * vid.height * sizeof( pixel_t ) );
+	}
+	else
+	{
+		video_atari_c2p( vid.buffer, screen + ( vga ? ( ( 240 - vid.height ) / 2 ) * vid.rowbytes : 0 ), vid.width * vid.height * sizeof( pixel_t ) );
+	}
 
 	// cycle 3 screens
 	temp	= screen1;

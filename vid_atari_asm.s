@@ -23,6 +23,7 @@
 	XDEF	_video_atari_shutdown
 	XDEF	_video_atari_set_palette
 	XDEF	_video_atari_c2p
+	XDEF	_video_atari_move16
 
 	XREF	_screen1
 
@@ -259,6 +260,20 @@ copy_pal:
 	addq.l	#1,palette_flag			; reload
 	rts
 
+; void video_atari_move16( char* buffer, char* screen, int size );
+
+_video_atari_move16:
+	movea.l	4(sp),a0			; source buffer
+	movea.l	8(sp),a1			; screen
+	move.l	12(sp),d0			; size
+	add.l	a1,d0
+
+.loop:	REPT	16
+	move16	(a0)+,(a1)+			; 256 bytes at once
+	ENDR
+	cmpa.l	d0,a1
+	bne.b	.loop
+	rts
 
 ; void video_atari_c2p( char* buffer, char* screen, int size );
 
