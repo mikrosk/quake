@@ -21,9 +21,6 @@
 		XDEF    _R_StepActiveU
 		XDEF    _R_GenerateSpans
 
-;TODO: vasm limitation
-; (1.0/(16*65536)) replaced with 0.000000954
-
 		fpu
 
 ******************************************************************************
@@ -438,8 +435,7 @@ _R_GenerateSpans
 		move.l  d7,d0
 		sub.l   #$fffff,d0              ;edge->u - 0xFFFFF
 		fmove.l d0,fp0                  ;(float)(edge->u - 0xFFFFF)
-		;fmul.s  #(1.0/(16*65536)),fp0   ;fu = fp0 * (1 / $100000)
-		fmul.s	#0.000000954,fp0
+		fmul.s  #(1.0/(16*65536)),fp0   ;fu = fp0 * (1 / $100000)
 		fmove.s _fv,fp1                 ;fv
 		fmove.s SURF_D_ZIORIGIN(a1),fp2
 		fmove.s SURF_D_ZISTEPV(a1),fp3
@@ -520,8 +516,7 @@ _R_GenerateSpans
 		move.l  d7,d0
 		sub.l   #$fffff,d0              ;edge->u - 0xFFFFF
 		fmove.l d0,fp0                  ;(float)(edge->u - 0xFFFFF)
-		;fmul.s  #(1.0/(16*65536)),fp0   ;fu = fp0 * (1 / $100000)
-		fmul.s	#0.000000954,fp0
+		fmul.s  #(1.0/(16*65536)),fp0   ;fu = fp0 * (1 / $100000)
 		fmove.s _fv,fp1                 ;fv
 		fmove.s SURF_D_ZIORIGIN(a1),fp2
 		fmove.s SURF_D_ZISTEPV(a1),fp3

@@ -27,8 +27,7 @@
 
 		XDEF    _D_DrawParticle
 
-;TODO: vasm limitation
-;PARTICLE_Z_CLIP         equ.s   8.0             ;must match the values in d_iface.h!
+PARTICLE_Z_CLIP         equ.s   8.0             ;must match the values in d_iface.h!
 
 
 
@@ -82,8 +81,7 @@ _D_DrawParticle
 		fadd    fp0,fp1
 		fmul.s  (a1)+,fp2
 		fadd    fp1,fp2                 ;fp2 = transformed[2]
-		;fcmp.s  #PARTICLE_Z_CLIP,fp2
-		fcmp.s	#8.0,fp2
+		fcmp.s  #PARTICLE_Z_CLIP,fp2
 		fblt.w  .exit
 		fmove.s #1,fp0
 		fdiv    fp2,fp0                 ;zi = 1.0 / transformed[2]

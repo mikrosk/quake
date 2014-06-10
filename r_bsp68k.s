@@ -37,8 +37,7 @@ PLANE_X                 =       0
 PLANE_Y                 =       1
 PLANE_Z                 =       2
 SURF_PLANEBACK          =       2
-;TODO: vasm limitation
-;BACKFACE_EPSILON        equ.s   0.01            ;r_local.h
+BACKFACE_EPSILON        equ.s   0.01            ;r_local.h
 MAX_BTOFPOLYS           =       5000
 PITCH                   =       0
 YAW                     =       1
@@ -512,8 +511,7 @@ DoRecursion
 		move    NODE_FIRSTSURFACE(a2),d0
 		asl.l   #MSURFACE_SIZEOF_EXP,d0
 		add.l   d0,a3
-		;fcmp.s  #-BACKFACE_EPSILON,fp2   ;if (dot < -BACKFACE_EPSILON)
-		fcmp.s	#-0.01,fp2
+		fcmp.s  #-BACKFACE_EPSILON,fp2   ;if (dot < -BACKFACE_EPSILON)
 		fboge.w .else2
 
 *                                        if ((surf->flags & SURF_PLANEBACK) &&
@@ -584,8 +582,7 @@ DoRecursion
 *                        else if (dot > BACKFACE_EPSILON)
 *                        {
 
-		;fcmp.s  #BACKFACE_EPSILON,fp2
-		fcmp.s	#0.01,fp2
+		fcmp.s  #BACKFACE_EPSILON,fp2
 		fbole.w .else3
 
 *                                        if (!(surf->flags & SURF_PLANEBACK) &&
