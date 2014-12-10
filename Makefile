@@ -166,7 +166,7 @@ $(BUILDDIR)/quake.ttp : $(QUAKE_OBJS) $(QUAKE_M68K_OBJS)
 	$(STRIP) quake.ttp
 	
 #quakedef68k.i: genasmheaders quakeasmheaders.gen
-#	$(MOUNT_DIR)/genasmheaders quakeasmheaders.gen $@ 1 "$(NATIVECC) -I."
+#	$(MOUNT_DIR)/genasmheaders quakeasmheaders.gen $@ 0 "$(NATIVECC) -I."
 
 #genasmheaders: genasmheaders.c
 #	$(NATIVECC) -o $@ genasmheaders.c
