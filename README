@@ -5,6 +5,8 @@ just a few notes...
 
 - Makefile is really, really lame ;)
 
+- to compile under cross-environment, use make <target> CROSS=yes
+
 - to get C only version you need to comment out QUAKE_M68K_OBJS from linker
   and to remove -DM68K_MIX and -DM68KASM definitions (begin of makefile)
 

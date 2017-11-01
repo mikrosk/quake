@@ -1,8 +1,33 @@
+/*
+ * vid_atari_asm.s -- video handling for Atari Falcon 060
+ *
+ * Copyright (c) 2006 Miro Kropacek; miro.kropacek@gmail.com
+ * 
+ * This file is part of the Atari Quake project, 3D shooter game by ID Software,
+ * for Atari Falcon 060 computers.
+ *
+ * Atari Quake is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Atari Quake is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Atari Quake; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 	.globl	_video_atari_init
 	.globl	_video_atari_shutdown
 	.globl	_video_atari_set_palette
 	.globl	_video_atari_c2p
 	.globl	_video_atari_set_320x200
+	
+	.globl	_screen1
 
 	.text
 
@@ -13,13 +38,18 @@ _video_atari_init:
 	
 	movem.l	d2-d7/a2-a6,-(sp)
 	
-	pea	save_videl
-	move.w	#0x26,-(sp)			| Supexec
+	pea	save_videl			| Supexec
+	move.w	#0x26,-(sp)			|
 	trap	#14				|
 	addq.l	#6,sp				|
 	
-	pea	set_vram
-	move.w	#0x26,-(sp)			| Supexec
+	pea	set_vram			| Supexec
+	move.w	#0x26,-(sp)			|
+	trap	#14				|
+	addq.l	#6,sp				|
+	
+	pea	set_vbl				| Supexec
+	move.w	#0x26,-(sp)			|
 	trap	#14				|
 	addq.l	#6,sp				|
 	
@@ -74,13 +104,74 @@ set_vram:
 	lsr.w	#8,d0				|
 	move.l	d0,0xffff8200.w			|
 	move.b	d1,0xffff820d.w			|
+	
+	move.l	d1,current_vram			| set pointer
 	rts
 	
+set_vbl:
+	move.w	0x454.w,d7			| number of slots
+	beq.b	set_vbl_end
+	
+	movea.l	0x456.w,a0			| pointer to slots
+	subq.w	#1,d7
+
+set_vbl_loop:
+	move.l	(a0),d0
+	beq.b	set_vbl_found
+	
+	addq.l	#4,a0
+	dbra	d7,set_vbl_loop
+	
+set_vbl_found:
+	tst.l	d0				| not empty slot
+	bne.b	set_vbl_end
+	
+	move.l	#vbl,(a0)
+	move.l	a0,save_vbl
+	
+set_vbl_end:
+	rts
+	
+	
+vbl:	move.l	_screen1,d0			| check if the physical screen
+	cmp.l	current_vram,d0			| changed
+	bne.b	vbl_changed
+	bra.b	vbl_skip
+	
+vbl_changed:
+	move.l	d0,temp_1
+	bsr.w	set_vram
+	
+vbl_skip:
+	tst.l	palette_flag
+	beq.b	vbl_no_pal
+	
+	clr.l	palette_flag
+	
+	lea	current_palette,a0
+	lea	0xffff9800.w,a1
+	moveq	#256/2-1,d7
+vbl_copy_pal:
+	move.l	(a0)+,(a1)+
+	move.l	(a0)+,(a1)+
+	dbra	d7,vbl_copy_pal
+
+vbl_no_pal:
+	rts
+	
+	
+| void video_atari_shutdown( void )
+
 _video_atari_shutdown:
 	movem.l	d2-d7/a2-a6,-(sp)
 	
-	pea	restore_videl
-	move.w	#0x26,-(sp)			| Supexec
+	pea	restore_videl			| Supexec
+	move.w	#0x26,-(sp)			|
+	trap	#14				|
+	addq.l	#6,sp				|
+	
+	pea	restore_vbl			| Supexec
+	move.w	#0x26,-(sp)			|
 	trap	#14				|
 	addq.l	#6,sp				|
 	
@@ -146,29 +237,19 @@ restore_loop:					|
 	
 	rts
 	
+restore_vbl:
+	movea.l	save_vbl,a0
+	clr.l	(a0)
+	rts
+	
 	
 | void video_atari_set_palette( char* palette );
 
 _video_atari_set_palette:
-	move.l	4(sp),temp_1			| save palette pointer
-	
-	movem.l	d2-d7/a2-a6,-(sp)
-	
-	pea	set_palette
-	move.w	#0x26,-(sp)			| Supexec
-	trap	#14				|
-	addq.l	#6,sp				|
-	
-	movem.l	(sp)+,d2-d7/a2-a6
-	rts
-	
-set_palette:
-	bsr.w	wait_vbl			| avoid flicking
-	
-	movea.l	temp_1,a0			| source palette
-	lea	0xffff9800.w,a1
-	move.w	#256-1,d7
-pal_loop:
+	movea.l	(4,sp),a0			| source palette
+	lea	current_palette,a1
+	move.w	#256-1,d1
+copy_pal:
 	clr.l	d0
 	move.b	(a0)+,d0
 	lsl.l	#8,d0
@@ -176,10 +257,12 @@ pal_loop:
 	swap	d0
 	move.b	(a0)+,d0
 	move.l	d0,(a1)+
-	dbra	d7,pal_loop
+	dbra	d1,copy_pal
+
+	addq.l	#1,palette_flag			| reload
 	rts
-		
 	
+
 | void video_atari_c2p( char* buffer, char* screen, int size );
 
 _video_atari_c2p:
@@ -432,3 +515,11 @@ save_pal:
 	ds.l	256+16/2			| old colours (falcon+st/e)
 save_video:
 	ds.b	32+12+2				| videl save
+save_vbl:
+	ds.l	1				| vbl pointer save
+current_vram:
+	ds.l	1				| pointer to current buffer
+palette_flag:
+	ds.l	1				| 1: reload palette
+current_palette:
+	ds.l	256				| copy of palette registers

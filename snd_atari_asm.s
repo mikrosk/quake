@@ -1,6 +1,7 @@
 **
 **  Sound mixing routines for Amiga 68k
 **  Written by Frank Wille <frank@phoenix.owl.de>
+**  Atari modifications by Miro Kropacek <miro.kropacek@gmail.com>
 **
 ** This implementation of S_TransferPaintBuffer() handles the following
 ** format:

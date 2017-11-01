@@ -1,23 +1,25 @@
 /*
-Copyright (C) 1996-1997 Id Software, Inc.
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
-// in_null.c -- for systems without a mouse
+ * in_atari.c -- input handling from mouse and keyboard for Atari Falcon 060
+ *
+ * Copyright (c) 2006 Miro Kropacek; miro.kropacek@gmail.com
+ * 
+ * This file is part of the Atari Quake project, 3D shooter game by ID Software,
+ * for Atari Falcon 060 computers.
+ *
+ * Atari Quake is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Atari Quake is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Atari Quake; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 #include "quakedef.h"
 #include "in_atari.h"
@@ -49,74 +51,6 @@ void IN_MouseCommands( void )
 
 void IN_MouseMove( usercmd_t *cmd )
 {
-	#if 0
-	float mx, my;
-	
-	if( !useMouse )
-	{
-		return;
-	}
-	
-	mx = g_mouseInfo.mx;
-	my = g_mouseInfo.my;
-	
-	g_mouseInfo.mx = 0;
-	g_mouseInfo.my = 0;
-	
-	/*
-	if (m_filter.value)
-	{
-		mx = (mx + old_mouse_x) * 0.5;
-		my = (my + old_mouse_y) * 0.5;
-	}
-	*/
-
-	old_mouse_x = mx;
-	old_mouse_y = my;
-
-	mx *= sensitivity.value;
-	my *= sensitivity.value;
-
-	if( alwaysLook )
-	{
-		cl.viewangles[YAW] -= mx;
-		V_StopPitchDrift ();
-		cl.viewangles[PITCH] += my;
-		if (cl.viewangles[PITCH] > 80)
-			cl.viewangles[PITCH] = 80;
-		if (cl.viewangles[PITCH] < -70)
-			cl.viewangles[PITCH] = -70;
-	}
-	else
-	{
-		// add mouse X/Y movement to cmd
-		if ( (in_strafe.state & 1) || (lookstrafe.value && (in_mlook.state & 1) ))
-			cmd->sidemove += mx;
-		else
-			cl.viewangles[YAW] -= mx;
-		
-		if (in_mlook.state & 1)
-			V_StopPitchDrift ();
-			
-		if ( (in_mlook.state & 1) && !(in_strafe.state & 1))
-		{
-			cl.viewangles[PITCH] += my;
-			if (cl.viewangles[PITCH] > 80)
-				cl.viewangles[PITCH] = 80;
-			if (cl.viewangles[PITCH] < -70)
-				cl.viewangles[PITCH] = -70;
-		}
-		else
-		{
-			if ((in_strafe.state & 1) && noclip_anglehack)
-				cmd->upmove -= my;
-			else
-				cmd->forwardmove -= my;
-		}
-	}
-	
-	#else
-	
 	if( !useMouse )
 	{
 		return;
@@ -178,7 +112,6 @@ void IN_MouseMove( usercmd_t *cmd )
 				cmd->forwardmove -= m_forward.value * mouse_y;
 		}
 	}
-	#endif
 }
 
 void IN_Mouse (void)

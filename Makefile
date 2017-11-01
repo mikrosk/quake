@@ -1,10 +1,8 @@
 #
-# Quake Makefile for Atari 2.0
+# Quake Makefile for Atari 2.1
 #
-# Aug '06 by Miro Kropacek <mikro@hysteria.sk>
+# Sep '06 by Miro Kropacek <miro.kropacek@gmail.com>
 #
-
-BASEVERSION=1.09
 
 MOUNT_DIR=.
 
@@ -13,11 +11,24 @@ BUILD_RELEASE_DIR=release
 
 M68KASM_DIR=asm68k
 
-CC=gcc
-CC3=gcc-3.3.6
+ifeq ($(CROSS),yes)
+	bin-prefix=m68k-atari-mint-
+else
+	bin-prefix=
+endif
+
+NATIVECC=gcc
+CC3=/root/download/atari-gcc/bin/gcc
+
+CC=${bin-prefix}gcc
+AS=${bin-prefix}as
+LD=${bin-prefix}ld
+STACK=${bin-prefix}stack
+FLAGS=${bin-prefix}flags
+STRIP=${bin-prefix}strip -s
 
 BASE_CFLAGS=-Dstricmp=strcasecmp -DM68K_MIX -DM68KASM
-RELEASE_CFLAGS=$(BASE_CFLAGS) -g -Wall -m68060 -O3 -fomit-frame-pointer
+RELEASE_CFLAGS=$(BASE_CFLAGS) -g -Wall -m68060 -O3
 DEBUG_CFLAGS=$(BASE_CFLAGS) -g -Wall -m68060
 LDFLAGS=-lm
 
@@ -147,16 +158,17 @@ QUAKE_M68K_OBJS = \
 	
 $(BUILDDIR)/quake.ttp : $(QUAKE_OBJS) $(QUAKE_M68K_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(QUAKE_OBJS) $(QUAKE_M68K_OBJS) $(LDFLAGS)
-	stack --fix=512k $(BUILDDIR)/quake.ttp
-	flags -S $(BUILDDIR)/quake.ttp
+	$(STACK) --fix=512k $(BUILDDIR)/quake.ttp
+	$(FLAGS) -S $(BUILDDIR)/quake.ttp
 	cp $(BUILDDIR)/quake.ttp $(MOUNT_DIR)
+	$(STRIP) quake.ttp
 	
 quakedef68k.i: genasmheaders quakeasmheaders.gen
-	$(MOUNT_DIR)/genasmheaders quakeasmheaders.gen $@ 1 "$(CC) $(CFLAGS) -I."
+	$(MOUNT_DIR)/genasmheaders quakeasmheaders.gen $@ 1 "$(NATIVECC) -I."
 
 genasmheaders: genasmheaders.c
-	$(CC) -o $@ genasmheaders.c
-	
+	$(NATIVECC) -o $@ genasmheaders.c
+
 ####
 
 $(BUILDDIR)/obj/cl_demo.o :  $(MOUNT_DIR)/cl_demo.c
@@ -487,6 +499,10 @@ $(MOUNT_DIR)/d_sprite68k.s:          $(M68KASM_DIR)/d_sprite68k.s
 #############################################################################
 
 clean: clean-debug clean-release
+	-rm *.BAK *.bak
+	-rm *68k.s
+	-rm gendefs gendefs.c genasmheaders quakedef68k.i
+	-rm quake.ttp
 
 clean-debug:
 	$(MAKE) clean2 BUILDDIR=$(BUILD_DEBUG_DIR) CFLAGS="$(DEBUG_CFLAGS)"
@@ -496,8 +512,4 @@ clean-release:
 
 clean2:
 	-rm -f $(QUAKE_OBJS) $(QUAKE_M68K_OBJS)
-	-rm *.BAK *.bak
-	-rm *68k.s
-	-rm gendefs gendefs.c genasmheaders quakedef68k.i
 	-rm $(BUILDDIR)/quake.ttp
-	-rm quake.ttp

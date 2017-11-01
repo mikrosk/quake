@@ -1,3 +1,15 @@
+1.02
+====
+
+- triple-buffer support => smoother, flickerless rendering
+
+- palette update does in vbl only (not waiting for vbl) => smoother rendering
+
+- added "loading icon"
+
+- killed -frametime parameter, replaced with value from 200 Hz system timer
+
+
 1.01
 ====
 

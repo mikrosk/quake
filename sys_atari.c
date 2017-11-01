@@ -1,23 +1,25 @@
 /*
-Copyright (C) 1996-1997 Id Software, Inc.
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
-// sys_atari.c -- atari system driver
+ * sys_atari.c -- system stuff for Atari Falcon 060
+ *
+ * Copyright (c) 2006 Miro Kropacek; miro.kropacek@gmail.com
+ *
+ * This file is part of the Atari Quake project, 3D shooter game by ID Software,
+ * for Atari Falcon 060 computers.
+ *
+ * Atari Quake is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Atari Quake is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Atari Quake; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 #include <mint/osbind.h>
 #include <mint/ostruct.h>
@@ -42,7 +44,6 @@ static unsigned char unshiftToAscii[128];
 static unsigned char shiftToAscii[128];
 static unsigned char capsToAscii[128];
 static qboolean isMintPresent = false;
-static float frameTime = 0.1;
 
 typedef struct
 {
@@ -56,7 +57,7 @@ typedef struct
  * - cd audio
  * - networking
  * - joystick support?
- * - more graphics resolutions
+ * - more graphics resolutions?
  */
 
 
@@ -74,7 +75,7 @@ FILE    *sys_handles[MAX_HANDLES];
 int             findhandle (void)
 {
 	int             i;
-	
+
 	for (i=1 ; i<MAX_HANDLES ; i++)
 		if (!sys_handles[i])
 			return i;
@@ -82,26 +83,46 @@ int             findhandle (void)
 	return -1;
 }
 
+long CheckMintPresence( void )
+{
+	COOKIE* pCookie;
+
+	pCookie = *( (COOKIE **)0x5A0L );
+
+	if( pCookie != NULL)
+	{
+		do
+		{
+			if( pCookie->cookie == C_MiNT )
+			{
+				isMintPresent = true;
+			}
+
+		} while( (pCookie++)->cookie != 0L );
+	}
+
+	return 0;
+}
+
 void Sys_Init( void )
 {
 	_KEYTAB*	pSKeyboards;
-	char*		pOldssp;
-	COOKIE*		pCookie;
-	
+	//char*		pOldssp;
+
 	// clear scancode buffer
 	memset( g_scancodeBuffer, 0, SCANCODE_BUFFER_SIZE );
-	
+
 	// setup new ikbd handler
 	atari_ikbd_init();
-	
+
 	// get translation tables
 	pSKeyboards = Keytbl( KT_NOCHANGE, KT_NOCHANGE, KT_NOCHANGE );
-	
+
 	// make a copies
 	memcpy( unshiftToAscii, pSKeyboards->unshift, 128 );
 	memcpy( shiftToAscii, pSKeyboards->shift, 128 );
 	memcpy( capsToAscii, pSKeyboards->caps, 128 );
-	
+
 	// patch for atari scancodes
 	unshiftToAscii[0x0f] = K_TAB;
 	unshiftToAscii[0x1c] = K_ENTER;
@@ -141,7 +162,7 @@ void Sys_Init( void )
 	unshiftToAscii[0x59] = K_MWHEELUP;	// eiffel only
 	unshiftToAscii[0x5a] = K_MWHEELDOWN;	// eiffel only
 	unshiftToAscii[0x5b] = '`';	// eiffel only
-	
+
 	shiftToAscii[0x0f] = K_TAB;
 	shiftToAscii[0x1c] = K_ENTER;
 	shiftToAscii[0x01] = K_ESCAPE;
@@ -181,25 +202,8 @@ void Sys_Init( void )
 	shiftToAscii[0x5a] = K_MWHEELDOWN;	// eiffel only
 	shiftToAscii[0x5b] = '~';	// eiffel only
 
-	
 	// check FreeMiNT presence
-	pOldssp = (char*)Super( 0L );
-
-	pCookie = *( (COOKIE **)0x5A0L );
-	
-	if( pCookie != NULL)
-	{
-		do
-		{
-			if( pCookie->cookie == C_MiNT )
-			{
-				isMintPresent = true;
-			}
-			
-		} while( (pCookie++)->cookie != 0L );
-	}
-	
-	Super( pOldssp );
+	Supexec( CheckMintPresence );
 }
 
 /*
@@ -224,7 +228,7 @@ int Sys_FileOpenRead (char *path, int *hndl)
 {
 	FILE    *f;
 	int             i;
-	
+
 	i = findhandle ();
 
 	f = fopen(path, "rb");
@@ -235,7 +239,7 @@ int Sys_FileOpenRead (char *path, int *hndl)
 	}
 	sys_handles[i] = f;
 	*hndl = i;
-	
+
 	return filelength(f);
 }
 
@@ -243,14 +247,14 @@ int Sys_FileOpenWrite (char *path)
 {
 	FILE    *f;
 	int             i;
-	
+
 	i = findhandle ();
 
 	f = fopen(path, "wb");
 	if (!f)
 		Sys_Error ("Error opening %s: %s", path,strerror(errno));
 	sys_handles[i] = f;
-	
+
 	return i;
 }
 
@@ -278,14 +282,14 @@ int Sys_FileWrite (int handle, void *data, int count)
 int     Sys_FileTime (char *path)
 {
 	FILE    *f;
-	
+
 	f = fopen(path, "rb");
 	if (f)
 	{
 		fclose(f);
 		return 1;
 	}
-	
+
 	return -1;
 }
 
@@ -311,7 +315,7 @@ void Sys_Error (char *error, ...)
 {
 	va_list         argptr;
 
-	printf ("Sys_Error: ");   
+	printf ("Sys_Error: ");
 	va_start (argptr,error);
 	vprintf (error,argptr);
 	va_end (argptr);
@@ -323,7 +327,7 @@ void Sys_Error (char *error, ...)
 void Sys_Printf (char *fmt, ...)
 {
 	va_list         argptr;
-	
+
 	va_start (argptr,fmt);
 	vprintf (fmt,argptr);
 	va_end (argptr);
@@ -332,37 +336,48 @@ void Sys_Printf (char *fmt, ...)
 void Sys_Quit (void)
 {
 	Host_Shutdown();
-	
+
 	atari_ikbd_shutdown();
-	
+
 	exit( 0 );
+}
+
+long GetSystemTimerValue( void )
+{
+	return *( (long*)0x4ba );	// system timer value (200 Hz precision)
 }
 
 double Sys_FloatTime (void)
 {
-	struct timeval tp;
-	struct timezone tzp; 
-	static int      secbase; 
-	static double t;
-	
-	// we need to do this else brutal slowdown of whole game
-	// appears under tos/magic (low precision of tos/magic time)
+	struct timeval	tp;
+	struct timezone	tzp;
+	static int		secbase;
+	unsigned long	ticks;
+
+
 	if( isMintPresent )
 	{
-		gettimeofday( &tp, &tzp );  
-
+		gettimeofday( &tp, &tzp );
+		
 		if( !secbase )
 		{
-			secbase = tp.tv_sec;
-			return tp.tv_usec/1000000.0;
+			secbase = tp.tv_sec;	// get seconds
+			return tp.tv_usec/1000000.0;	// get seconds (from microseconds)
 		}
-		
+
 		return ( tp.tv_sec - secbase ) + tp.tv_usec/1000000.0;
 	}
 	else
 	{
-		t += frameTime;
-		return t;
+		ticks = (unsigned long)Supexec( GetSystemTimerValue );
+
+		if( !secbase )
+		{
+			secbase = ticks / 200;	// get seconds
+			return ticks / 200.0;	// get seconds
+		}
+
+		return ( ( ticks / 200.0 ) - secbase ) + ticks / 200.0;
 	}
 }
 
@@ -379,12 +394,12 @@ void Sys_SendKeyEvents (void)
 {
 	unsigned char scancode;
 	unsigned char ascii;
-	
+
 	while( g_scancodeBufferHead != g_scancodeBufferTail )
 	{
 		scancode = g_scancodeBuffer[g_scancodeBufferTail++];
 		g_scancodeBufferTail &= SCANCODE_BUFFER_SIZE-1;
-		
+
 		// it's fucking important to pass this ascii value as
 		// unsigned char !!!
 		if( g_scancodeShiftDepressed == 0 )
@@ -396,7 +411,7 @@ void Sys_SendKeyEvents (void)
 			g_scancodeShiftDepressed = 0;
 			ascii = shiftToAscii[scancode & 0x7f];
 		}
-		
+
 		if( ( scancode & 0x80 ) == 0 )
 		{
 			Key_Event( ascii, true );
@@ -424,6 +439,8 @@ int main (int argc, char **argv)
 	double	time, oldtime, newtime;
 	int		j;
 
+	Sys_Init();
+
 	parms.memsize = 48*1024*1024;
 	parms.basedir = ".";
 
@@ -431,7 +448,7 @@ int main (int argc, char **argv)
 
 	parms.argc = com_argc;
 	parms.argv = com_argv;
-	
+
 	j = COM_CheckParm("-mem");
 	if (j)
 		parms.memsize = (int) (Q_atof(com_argv[j+1]) * 1024 * 1024);
@@ -439,16 +456,8 @@ int main (int argc, char **argv)
 
 	printf ("Host_Init\n");
 	Host_Init (&parms);
-	
-	isDedicated = (COM_CheckParm ("-dedicated") != 0);
-	
-	j = COM_CheckParm("-frametime");
-	if( j != 0 )
-	{
-		frameTime = Q_atof( com_argv[j+1] );
-	}
 
-	Sys_Init ();
+	isDedicated = (COM_CheckParm ("-dedicated") != 0);
 
 	oldtime = Sys_FloatTime ();
 	while (1)
@@ -463,6 +472,6 @@ int main (int argc, char **argv)
 
 		oldtime = newtime;
 	}
-	
+
 	return 0;
 }
