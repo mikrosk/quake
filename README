@@ -1,0 +1,34 @@
+
+just a few notes...
+
+- game is compilable using classic gnu binutils (make, gcc & stuff)
+
+- Makefile is really, really lame ;)
+
+- to get C only version you need to comment out QUAKE_M68K_OBJS from linker
+  and to remove -DM68K_MIX and -DM68KASM definitions (begin of makefile)
+
+- the source includes very sophisticated devpac to gnu as converter, you 
+  need a perl package from sparemint distribution to run it
+
+- it's possible you'll get some compile errors -- i use some own <mint>/* 
+  includes (with constants from Atari Compendium) -- drop me a line if 
+  you're interested
+
+- asm68k directory contains original amiga sources. but beware! they had 
+  to be changed since not everything can be handled by perl script! 
+  concretly:
+  - equ.s <float> has to be replaced directly in source! (3 or 4 times)
+
+  - some byte offsets in jumps don't fit into 128 bytes (?) -- replace 
+    with .w
+
+  - all fxxx.s #integer replaced with fxxx.[wl] #integer
+
+  - one or two fmove.l #fucking_big_integer replaced with 3 instructions
+
+  ... so don't try to compile new atari quake everytime amiga version 
+  changes its asm sources :)
+
+
+And that's it! Sources are under GPL ofcourse!

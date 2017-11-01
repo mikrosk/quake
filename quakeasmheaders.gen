@@ -1,0 +1,313 @@
+#h "quakedef.h"
+#h "r_shared.h"
+#h "r_local.h"
+#h "d_local.h"
+#h "d_polyse.h"
+
+#s msurface_t MSURFACE
+visframe	VISFRAME
+dlightframe	DLIGHTFRAME
+dlightbits	DLIGHTBITS
+plane		PLANE
+flags		FLAGS
+firstedge	FIRSTEDGE
+numedges	NUMEDGES
+cachespots	CACHESPOTS
+texturemins	TEXTUREMINS
+extents		EXTENTS
+texinfo		TEXINFO
+styles		STYLES
+samples		SAMPLES
+#e
+#l
+
+#s mvertex_t MVERTEX
+#l
+
+#s medge_t MEDGE
+v		V
+cachededgeoffset CEO
+#e
+#l
+
+#s mplane_t MPLANE
+normal		NORMAL
+dist		DIST
+type		TYPE
+signbits	SIGNBITS
+#l
+
+#s mtexinfo_t MTEXINFO
+vecs		VECS
+mipadjust	MIPADJUST
+texture		TEXTURE
+flags		FLAGS
+#l
+
+#s surf_t SURF
+next		NEXT
+prev		PREV
+spans		SPANS
+key		KEY
+last_u		LAST_U
+spanstate	SPANSTATE
+flags		FLAGS
+data		DATA
+entity		ENTITY
+nearzi		NEARZI
+insubmodel	INSUBMODEL
+d_ziorigin	D_ZIORIGIN
+d_zistepu	D_ZISTEPU
+d_zistepv	D_ZISTEPV
+#e
+#l
+
+#s espan_t SPAN
+u		U
+v		V
+count		COUNT
+pnext		PNEXT
+#l
+
+#s edge_t EDGE
+u		U
+u_step		U_STEP
+prev		PREV
+next		NEXT
+surfs		SURFS
+nextremove	NEXTREMOVE
+nearzi		NEARZI
+owner		OWNER
+#e
+#l
+
+#s clipplane_t CLIP
+normal		NORMAL
+dist		DIST
+next		NEXT
+leftedge	LEFTEDGE
+rightedge	RIGHTEDGE
+reserved 	RESERVED
+#l
+
+#s surfcache_t SURFCACHE
+next		NEXT
+owner		OWNER
+lightadj	LIGHTADJ
+dlight		DLIGHT
+size		SIZE
+width		WIDTH
+height		HEIGHT
+mipscale	MIPSCALE
+texture		TEXTURE
+data		DATA
+#l
+
+#s texture_t TEXTURE
+offsets		OFFSETS
+
+#s cvar_t CVAR
+value		VALUE
+
+#s entity_t ENTITY
+forcelink	FORCELINK
+update_type	UPDATE_TYPE
+baseline	BASELINE
+msgtime		MSGTIME
+msg_origins	MSG_ORIGINS
+origin		ORIGIN
+msg_angles	MSG_ANGLES
+angles		ANGLES
+model		MODEL
+efrag		EFRAG
+frame		FRAME
+syncbase	SYNCBASE
+colormap	COLORMAP
+effects		EFFECTS
+skinnum		SKINNUM
+visframe	VISFRAME
+dlightframe	DLIGHTFRAME
+dlightbits	DLIGHTBITS
+trivial_accept	TRIVIAL_ACCEPT
+topnode		TOPNODE
+#l
+
+#s mnode_t NODE
+contents	CONTENTS
+visframe	VISFRAME
+minmaxs		MINMAXS
+parent		PARENT
+plane		PLANE
+children	CHILDREN
+firstsurface	FIRSTSURFACE
+numsurfaces	NUMSURFACES
+
+#s mleaf_t LEAF
+contents	CONTENTS
+visframe	VISFRAME
+minmaxs		MINMAXS
+parent		PARENT
+compressed_vis	COMPRESSED_VIS
+efrags		EFRAGS
+firstmarksurface FIRSTMARKSURFACE
+nummarksurfaces	NUMMARKSURFACES
+key		KEY
+
+#s client_state_t CL
+time		TIME
+worldmodel	WORLDMODEL
+
+#s refdef_t REFDEF
+vrect		VRECT
+aliasvrect	ALIASVRECT
+vrectright	VRECTRIGHT
+vrectbottom	VRECTBOTTOM
+aliasvrectright	ALIASVRECTRIGHT
+aliasvrectbottom ALIASVRECTBOTTOM
+fvrectx_adj	FVRECTX_ADJ
+fvrecty_adj	FVRECTY_ADJ
+vrect_x_adj_shift20 VRECTX_ADJ_S20
+vrectright_adj_shift20 VRECTXR_ADJ_S20
+fvrectright_adj	FVRECTRIGHT_ADJ
+fvrectbottom_adj FVRECTBOTTOM_ADJ
+
+#s vrect_t VRECT
+x		X
+y		Y
+width		WIDTH
+height		HEIGHT
+pnext		PNEXT
+
+#s viddef_t VID
+buffer		BUFFER
+colormap	COLORMAP
+width		WIDTH
+height		HEIGHT
+rowbytes	ROWBYTES
+
+#s spanpackage_t PSPANP
+pdest		PDEST
+pz		PZ
+count		COUNT
+ptex		PTEX
+sfrac		SFRAC
+tfrac		TFRAC
+light		LIGHT
+zi		ZI
+#l
+#e
+
+#s edgetable ETAB
+isflattop	ISFLATTOP
+numleftedges	NUMLEFTEDGES
+pleftedgevert0	PLEV0
+pleftedgevert1	PLEV1
+pleftedgevert2	PLEV2
+numrightedges	NUMRIGHTEDGES
+prightedgevert0	PREV0
+prightedgevert1	PREV1
+prightedgevert2	PREV2
+#l
+
+#s affinetridesc_t R
+pskin		PSKIN
+pskindesc	PSKINDESC
+skinwidth	SKINWIDTH
+skinheight	SKINHEIGHT
+ptriangles	PTRIANGLES
+pfinalverts	PFINALVERTS
+numtriangles	NUMTRIANGLES
+drawtype	DRAWTYPE
+seamfixupX16	SEAMFIXUP16
+#l
+
+#s adivtab_t PTEMP
+quotient	QUOTIENT
+remainder	REMAINDER
+
+#s mtriangle_t MT
+facesfront	FACESFRONT
+vertindex	VERTINDEX
+#l
+
+#s finalvert_t FV
+v		V
+flags		FLAGS
+reserved	RESERVED
+#l
+#e
+
+#s drawsurf_t DRAWSURF
+surfdat		SURFDAT
+rowbytes	ROWBYTES
+surf		SURF
+lightadj	LIGHTADJ
+texture		TEXTURE
+surfmip		SURFMIP
+surfwidth	SURFWIDTH
+surfheight	SURFHEIGHT
+#l
+
+#s trivertx_t TV
+v		V
+lightnormalindex LIGHTNORMALINDEX
+
+#s stvert_t SV
+onseam		ONSEAM
+s		S
+t		T
+
+#s dma_t dma
+gamealive	gamealive
+soundalive	soundalive
+splitbuffer	splitbuffer
+channels	channels
+samples		samples
+submission_chunk submission_chunk
+samplepos	samplepos
+samplebits	samplebits
+speed		speed
+buffer		buffer
+
+#s particle_t PART
+org		ORG
+color		COLOR
+
+#s btofpoly_t BTOFPOLY
+clipflags	CLIPFLAGS
+psurf		PSURF
+
+#s model_t MODEL
+name		NAME
+needload	NEEDLOAD
+type		TYPE
+numframes	NUMFRAMES
+synctype	SYNCTYPE
+flags		FLAGS
+mins		MINS
+maxs		MAXS
+radius		RADIUS
+firstmodelsurface FIRSTMS
+nummodelsurfaces NUMMS
+numsubmodels	NUMSUBMODELS
+submodels	SUBMODELS
+numplanes	NUMPLANES
+planes		PLANES
+numleafs	NUMLEAFS
+leafs		LEAFS
+numvertexes	NUMVERTEXES
+vertexes	VERTEXES
+numedges	NUMEDGES
+edges		EDGES
+numnodes	NUMNODES
+nodes		NODES
+numtexinfo	NUMTEXINFO
+texinfo		TEXINFO
+numsurfaces	NUMSURFACES
+surfaces	SURFACES
+numsurfedges	NUMSURFEDGES
+surfedges	SURFEDGES
+numclipnodes	NUMCLIPNODES
+clipnodes	CLIPNODES
+nummarksurfaces	NUMMARKSURFACES
+marksurfaces	MARKSURFACES
