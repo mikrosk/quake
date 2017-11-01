@@ -22,6 +22,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <mint/osbind.h>
 #include <mint/ostruct.h>
 
+#include "snd_atari_asm.h"
+
 #include "quakedef.h"
 
 dma_t atari_shm;
@@ -45,6 +47,9 @@ qboolean SNDDMA_Init(void)
 		Con_Printf( "Sound system is already in use!\n" );
 		return false;
 	}
+	
+	// save sound regs
+	sound_atari_init();
 	
 	memset( &atari_shm, 0, sizeof( dma_t ) );
 	
@@ -113,6 +118,9 @@ void SNDDMA_Shutdown(void)
 		Buffoper( 0x0000 );	/* disable playback */
 		Devconnect( 0x0000, DAC, CLK25M, CLK12K, NO_SHAKE );	/* nothing -> DAC */
 		Unlocksnd();
+		
+		// restore sound regs
+		sound_atari_shutdown();
 	}
 }
 

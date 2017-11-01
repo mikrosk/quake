@@ -350,7 +350,7 @@ _video_atari_set_320x200:
 vga:	move.l	#vga_320x200,temp_1
 	bra.b	monitor_ok
 
-rgb:	and.b	#0x02,d0			| %00000010
+rgb:	and.b	#0x01,d0			| %00000001
 	beq.b	mono
 	move.l	#rgb_320x200,temp_1
 	

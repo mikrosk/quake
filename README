@@ -11,7 +11,7 @@ just a few notes...
 - the source includes very sophisticated devpac to gnu as converter, you 
   need a perl package from sparemint distribution to run it
 
-- it's possible you'll get some compile errors -- i use some own <mint>/* 
+- it's possible you'll get some compile errors -- i use some own <mint/*> 
   includes (with constants from Atari Compendium) -- drop me a line if 
   you're interested
 

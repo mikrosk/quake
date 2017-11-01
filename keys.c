@@ -78,8 +78,8 @@ keyname_t keynames[] =
 	{"F8", K_F8},
 	{"F9", K_F9},
 	{"F10", K_F10},
-	{"HELP/F11", K_F11},
-	{"UNDO/F12", K_F12},
+	{"F11", K_F11},
+	{"F12", K_F12},
 
 	{"INS", K_INS},
 	{"DEL", K_DEL},

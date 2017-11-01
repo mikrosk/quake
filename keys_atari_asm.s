@@ -4,7 +4,8 @@
 	.globl	_g_scancodeBuffer
 	.globl	_g_scancodeBufferHead
 	.globl	_g_scancodeShiftDepressed
-	.globl	_mouseInfo
+	.globl	_g_mouseInfo
+	.globl	_reset_mouse_deltas
 
 	.text
 
@@ -52,18 +53,18 @@ new_ikbdsys:
 	cmp.b	#0xfb,d1
 	bhi.b	not_mouse
 	
-mouse:	lea	_mouseInfo,a0
-	clr.l	(8.w,a0)			| mouseInfo.leftButtonDepressed = false;
-	clr.l	(12.w,a0)			| mouseInfo.rightButtonDepressed = false;
+mouse:	lea	_g_mouseInfo,a0
+	clr.l	(8.w,a0)			| g_mouseInfo.leftButtonDepressed = false;
+	clr.l	(12.w,a0)			| g_mouseInfo.rightButtonDepressed = false;
 
 	move.b	d1,d0
 	and.b	#0x01,d0
 	beq.b	no_right_button
-	addq.l	#1,(12.w,a0)			| mouseInfo.rightButtonDepressed = true;
+	addq.l	#1,(12.w,a0)			| g_mouseInfo.rightButtonDepressed = true;
 no_right_button:
 	and.b	#0x02,d1
 	beq.b	no_left_button
-	addq.l	#1,(8.w,a0)			| mouseInfo.leftButtonDepressed = true;
+	addq.l	#1,(8.w,a0)			| g_mouseInfo.leftButtonDepressed = true;
 no_left_button:
 	
 	movea.l	ikbdsys_pointer,a0
@@ -99,11 +100,19 @@ shift_skip:
 mouse_ikbd_sys_1:
 	movem.l	d0/a0,-(sp)
 	
-	lea	_mouseInfo,a0			| get pointer to mouseInfo structure
+	lea	_g_mouseInfo,a0			| get pointer to g_mouseInfo structure
 	move.b	0xfffffc02,d0
 	dc.w	0x49c0				| extb	d0
-	move.l	d0,(0.w,a0)			| save as mx
 	
+	tst.l	_reset_mouse_deltas
+	bne.b	reset_mx
+	
+	add.l	d0,(0.w,a0)
+	bra.b	skip_mx
+reset_mx:
+	move.l	d0,(0.w,a0)			| save as mx
+
+skip_mx:
 	movea.l	ikbdsys_pointer,a0
 	move.l	#mouse_ikbd_sys_2,(a0)		| set pointer to proceed relative y
 	
@@ -113,17 +122,32 @@ mouse_ikbd_sys_1:
 mouse_ikbd_sys_2:
 	movem.l	d0/a0,-(sp)
 	
-	lea	_mouseInfo,a0			| get pointer to mouseInfo structure
+	lea	_g_mouseInfo,a0			| get pointer to g_mouseInfo structure
 	move.b	0xfffffc02,d0
 	dc.w	0x49c0				| extb	d0
-	move.l	d0,(4.w,a0)			| save as my
 	
+	tst.l	_reset_mouse_deltas
+	bne.b	reset_my
+	
+	add.l	d0,(4.w,a0)
+	bra.b	skip_my
+
+reset_my:
+	move.l	d0,(4.w,a0)			| save as my
+	clr.l	_reset_mouse_deltas
+	
+skip_my:
 	movea.l	ikbdsys_pointer,a0
 	move.l	#new_ikbdsys,(a0)		| set original pointer
 	
 	movem.l	(sp)+,d0/a0
 	jmp	([old_ikbdsys])
 
+
+	.data
+	
+_reset_mouse_deltas:
+	dc.l	1				| true
 
 	.bss
 	

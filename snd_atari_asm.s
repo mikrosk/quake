@@ -19,7 +19,9 @@
 	.globl	_paintbuffer
 	.globl	_paintedtime
 	.globl	_volume
-
+	
+	.globl	_sound_atari_init
+	.globl	_sound_atari_shutdown
 
 
 	.globl	_S_TransferPaintBuffer
@@ -81,3 +83,77 @@ l165:	subq.l	#1,d2
 	bne.b	S_TransferPaintBuffer_loop16
 exit:	movem.l	(sp)+,d2-d7/a2-a3
 	rts
+
+
+| void sound_atari_init( void );
+
+_sound_atari_init:
+	movem.l	d2-d7/a2-a6,-(sp)
+	
+	pea	save_regs
+	move.w	#0x26,-(sp)			| Supexec
+	trap	#14				|
+	addq.l	#6,sp				|
+		
+	movem.l	(sp)+,d2-d7/a2-a6
+	rts
+
+save_regs:
+	lea	save_audio,a0
+	move.w	0xffff8930.w,(a0)+
+	move.w	0xffff8932.w,(a0)+
+	move.b	0xffff8934.w,(a0)+
+	move.b	0xffff8935.w,(a0)+
+	move.b	0xffff8936.w,(a0)+
+	move.b	0xffff8937.w,(a0)+
+	move.b	0xffff8938.w,(a0)+
+;	move.b	0xffff8939.w,(a0)+
+;	move.w	0xffff893a.w,(a0)+
+	move.b	0xffff893c.w,(a0)+
+	move.b	0xffff8941.w,(a0)+
+	move.b	0xffff8943.w,(a0)+
+	move.b	0xffff8900.w,(a0)+
+	move.b	0xffff8901.w,(a0)+
+	move.b	0xffff8920.w,(a0)+
+	move.b	0xffff8921.w,(a0)+
+	rts
+	
+
+| void sound_atari_shutdown( void );
+
+_sound_atari_shutdown:
+	movem.l	d2-d7/a2-a6,-(sp)
+	
+	pea	restore_regs
+	move.w	#0x26,-(sp)			| Supexec
+	trap	#14				|
+	addq.l	#6,sp				|
+		
+	movem.l	(sp)+,d2-d7/a2-a6
+	rts
+
+restore_regs:
+	lea	save_audio,a0
+	move.w	(a0)+,0xffff8930.w
+	move.w	(a0)+,0xffff8932.w
+	move.b	(a0)+,0xffff8934.w
+	move.b	(a0)+,0xffff8935.w
+	move.b	(a0)+,0xffff8936.w
+	move.b	(a0)+,0xffff8937.w
+	move.b	(a0)+,0xffff8938.w
+;	move.b	(a0)+,0xffff8939.w
+;	move.w	(a0)+,0xffff893a.w
+	move.b	(a0)+,0xffff893c.w
+	move.b	(a0)+,0xffff8941.w
+	move.b	(a0)+,0xffff8943.w
+	move.b	(a0)+,0xffff8900.w
+	move.b	(a0)+,0xffff8901.w
+	move.b	(a0)+,0xffff8920.w
+	move.b	(a0)+,0xffff8921.w
+	rts
+
+
+	.bss
+
+save_audio:
+	ds.b	19

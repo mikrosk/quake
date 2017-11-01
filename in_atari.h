@@ -11,6 +11,7 @@ typedef struct
 	qboolean	rightButtonDepressed;
 } SMouse;
 
-extern SMouse mouseInfo;
+extern SMouse 	g_mouseInfo;
+extern qboolean	reset_mouse_deltas;
 
 #endif

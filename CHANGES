@@ -1,0 +1,16 @@
+1.01
+====
+
+- fixed bug with setting RGB resolution
+
+- compiled with gcc-3.3.6 -m68060 -O3 => better performance (maybe ;)
+
+- HELP/UNDO keys renamed back to F11/F12 (to make .cfg files happy)
+
+- added m68k sprite drawing routine from another amiga port => better speed
+
+- support for another version of shareware edition (thanks to Patrice Mandin)
+
+- sound system is now stored and restored completely
+
+- mouse is handled in more sensible way (moving forward doesn't look like snail :)

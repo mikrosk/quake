@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define	WINQUAKE_VERSION	0.996
 #define	LINUX_VERSION		1.30
 #define	X11_VERSION			1.10
-#define ATARI_VERSION		1.0
+#define ATARI_VERSION		1.01
 
 //define	PARANOID			// speed sapping error checking
 

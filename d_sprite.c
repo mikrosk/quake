@@ -20,6 +20,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // d_sprite.c: software top-level rasterization driver module for drawing
 // sprites
 
+//#undef M68KASM
+
 #include "quakedef.h"
 #include "d_local.h"
 
@@ -27,6 +29,7 @@ static int    sprite_height;
 static int    minindex, maxindex;
 static sspan_t  *sprite_spans;
 
+#ifndef M68KASM
 
 /*
 =====================
@@ -186,6 +189,8 @@ NextSpan:
 
   } while (pspan->count != DS_SPAN_LIST_END);
 }
+
+#endif
 
 
 /*

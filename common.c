@@ -51,6 +51,7 @@ extern float FloatSwap(float);
 // if a packfile directory differs from this, it is assumed to be hacked
 #define PAK0_COUNT              339
 #define PAK0_CRC                32981
+#define PAK0_CRC2				62751
 
 char  com_token[1024];
 int   com_argc;
@@ -1700,7 +1701,7 @@ pack_t *COM_LoadPackFile (char *packfile)
   CRC_Init (&crc);
   for (i=0 ; i<header.dirlen ; i++)
     CRC_ProcessByte (&crc, ((byte *)info)[i]);
-  if (crc != PAK0_CRC)
+  if (crc != PAK0_CRC && crc != PAK0_CRC2 )
     com_modified = true;
 
 // parse the directory

@@ -13,12 +13,15 @@ BUILD_RELEASE_DIR=release
 
 M68KASM_DIR=asm68k
 
+CC=gcc
+CC3=gcc-3.3.6
+
 BASE_CFLAGS=-Dstricmp=strcasecmp -DM68K_MIX -DM68KASM
-RELEASE_CFLAGS=$(BASE_CFLAGS) -g -Wall -m68020-60 -O2 -fomit-frame-pointer
-DEBUG_CFLAGS=$(BASE_CFLAGS) -g -Wall -m68020-60
+RELEASE_CFLAGS=$(BASE_CFLAGS) -g -Wall -m68060 -O3 -fomit-frame-pointer
+DEBUG_CFLAGS=$(BASE_CFLAGS) -g -Wall -m68060
 LDFLAGS=-lm
 
-DO_CC=$(CC) $(CFLAGS) -o $@ -c $<
+DO_CC=$(CC3) $(CFLAGS) -o $@ -c $<
 DO_AS=$(AS) -m68060 -o $@ $<
 DO_DEVPAC2GAS=$(MOUNT_DIR)/devpac2gas.perl $< > $@
 
@@ -138,7 +141,8 @@ QUAKE_M68K_OBJS = \
 	$(BUILDDIR)/obj/r_draw68k.o \
 	$(BUILDDIR)/obj/r_alias68k.o \
 	$(BUILDDIR)/obj/d_polyset68k.o \
-	$(BUILDDIR)/obj/d_scan68k.o
+	$(BUILDDIR)/obj/d_scan68k.o \
+	$(BUILDDIR)/obj/d_sprite68k.o
 	
 	
 $(BUILDDIR)/quake.ttp : $(QUAKE_OBJS) $(QUAKE_M68K_OBJS)
@@ -420,7 +424,10 @@ $(BUILDDIR)/obj/r_draw68k.o:            $(MOUNT_DIR)/r_draw68k.s quakedef68k.i
 
 $(BUILDDIR)/obj/r_bsp68k.o:             $(MOUNT_DIR)/r_bsp68k.s sincos.bin quakedef68k.i
 	$(DO_AS)
-	
+
+$(BUILDDIR)/obj/d_sprite68k.o:          $(MOUNT_DIR)/d_sprite68k.s
+	$(DO_AS)
+
 #####
 	
 
@@ -470,6 +477,9 @@ $(MOUNT_DIR)/r_draw68k.s:            $(M68KASM_DIR)/r_draw68k.s
 	$(DO_DEVPAC2GAS)
 
 $(MOUNT_DIR)/r_bsp68k.s:             $(M68KASM_DIR)/r_bsp68k.s
+	$(DO_DEVPAC2GAS)
+
+$(MOUNT_DIR)/d_sprite68k.s:          $(M68KASM_DIR)/d_sprite68k.s
 	$(DO_DEVPAC2GAS)
 
 #############################################################################

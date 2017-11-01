@@ -22,24 +22,34 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "in_atari.h"
 
-SMouse mouseInfo;
+SMouse g_mouseInfo;
 
-static float old_mouse_x = 0.0;
-static float old_mouse_y = 0.0;
+cvar_t	m_filter = {"m_filter","1"};
+
+static float mouse_x;
+static float mouse_y;
+static float old_mouse_x;
+static float old_mouse_y;
 static qboolean alwaysLook = false;
 static qboolean useMouse = true;
+
+void Force_CenterView_f (void)
+{
+	cl.viewangles[PITCH] = 0;
+}
 
 void IN_MouseCommands( void )
 {
 	if( useMouse )
 	{
-		Key_Event( K_MOUSE1, mouseInfo.leftButtonDepressed );
-		Key_Event( K_MOUSE2, mouseInfo.rightButtonDepressed );
+		Key_Event( K_MOUSE1, g_mouseInfo.leftButtonDepressed );
+		Key_Event( K_MOUSE2, g_mouseInfo.rightButtonDepressed );
 	}
 }
 
 void IN_MouseMove( usercmd_t *cmd )
 {
+	#if 0
 	float mx, my;
 	
 	if( !useMouse )
@@ -47,12 +57,12 @@ void IN_MouseMove( usercmd_t *cmd )
 		return;
 	}
 	
-	mx = mouseInfo.mx;
-	my = mouseInfo.my;
+	mx = g_mouseInfo.mx;
+	my = g_mouseInfo.my;
 	
-	mouseInfo.mx = 0;
-	mouseInfo.my = 0;
-
+	g_mouseInfo.mx = 0;
+	g_mouseInfo.my = 0;
+	
 	/*
 	if (m_filter.value)
 	{
@@ -104,19 +114,97 @@ void IN_MouseMove( usercmd_t *cmd )
 				cmd->forwardmove -= my;
 		}
 	}
+	
+	#else
+	
+	if( !useMouse )
+	{
+		return;
+	}
+	
+	mouse_x = g_mouseInfo.mx;
+	mouse_y = g_mouseInfo.my;
+	
+	reset_mouse_deltas = true;
+	g_mouseInfo.mx = 0;
+	g_mouseInfo.my = 0;
+	
+	if (m_filter.value)
+	{
+		mouse_x = (mouse_x + old_mouse_x) * 0.5;
+		mouse_y = (mouse_y + old_mouse_y) * 0.5;
+	}
+	
+	old_mouse_x = mouse_x;
+	old_mouse_y = mouse_y;
+	
+	mouse_x *= sensitivity.value;
+	mouse_y *= sensitivity.value;
+
+	if( alwaysLook )
+	{
+		cl.viewangles[YAW] -= m_yaw.value * mouse_x;
+		V_StopPitchDrift ();
+		cl.viewangles[PITCH] += m_pitch.value * mouse_y;
+		if (cl.viewangles[PITCH] > 80)
+			cl.viewangles[PITCH] = 80;
+		if (cl.viewangles[PITCH] < -70)
+			cl.viewangles[PITCH] = -70;
+	}
+	else
+	{
+		// add mouse X/Y movement to cmd
+		if ( (in_strafe.state & 1) || (lookstrafe.value && (in_mlook.state & 1) ))
+			cmd->sidemove += m_side.value * mouse_x;
+		else
+			cl.viewangles[YAW] -= m_yaw.value * mouse_x;
+		
+		if (in_mlook.state & 1)
+			V_StopPitchDrift ();
+			
+		if ( (in_mlook.state & 1) && !(in_strafe.state & 1))
+		{
+			cl.viewangles[PITCH] += m_pitch.value * mouse_y;
+			if (cl.viewangles[PITCH] > 80)
+				cl.viewangles[PITCH] = 80;
+			if (cl.viewangles[PITCH] < -70)
+				cl.viewangles[PITCH] = -70;
+		}
+		else
+		{
+			if ((in_strafe.state & 1) && noclip_anglehack)
+				cmd->upmove -= m_forward.value * mouse_y;
+			else
+				cmd->forwardmove -= m_forward.value * mouse_y;
+		}
+	}
+	#endif
 }
 
-void IN_Init (void)
+void IN_Mouse (void)
 {
+	if( COM_CheckParm( "-nomouse" ) != 0 )
+	{
+		useMouse = false;
+		return;
+	}
+	
 	if( COM_CheckParm( "-mouselook" ) != 0 )
 	{
 		alwaysLook = true;
 	}
 	
-	if( COM_CheckParm( "-nomouse" ) != 0 )
-	{
-		useMouse = false;
-	}
+	// center mouse
+	mouse_x = old_mouse_x = vid.width / 2;
+	mouse_y = old_mouse_y = vid.height / 2;
+}
+
+void IN_Init (void)
+{
+	Cvar_RegisterVariable (&m_filter);
+	Cmd_AddCommand ("force_centerview", Force_CenterView_f);
+	
+	IN_Mouse();
 }
 
 void IN_Shutdown (void)

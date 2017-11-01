@@ -56,8 +56,7 @@ typedef struct
  * - cd audio
  * - networking
  * - joystick support?
- * - more graphics resolutions (e.g. 16bit colour depth)
- * - implement compare c2p from amiga version (needs two buffers -- double/triplebuffer!)
+ * - more graphics resolutions
  */
 
 
